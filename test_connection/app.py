@@ -1,8 +1,9 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import mysql.connector
+from mysql.connector import pooling
 import os
 from dotenv import load_dotenv
+import time
 
 load_dotenv()  # only does anything locally; Render ignores this and uses its own env vars
 
@@ -10,14 +11,34 @@ app = Flask(__name__)
 
 CORS(app, origins=[os.environ.get("FRONTEND_URL", "http://localhost:5173")])
 
+
+db_pool = pooling.MySQLConnectionPool(
+    pool_name="quiz_pool",
+    pool_size=5,
+    pool_reset_session=False,
+    host=os.getenv("DB_HOST"),
+    port=int(os.getenv("DB_PORT")),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
+    database=os.getenv("DB_NAME"),
+    ssl_disabled=False
+)
 def get_connection():
-    return mysql.connector.connect(
-        host=os.environ.get("DB_HOST"),
-        user=os.environ.get("DB_USER"),
-        password=os.environ.get("DB_PASSWORD"),
-        database=os.environ.get("DB_NAME"),
-        port=int(os.environ.get("DB_PORT", 3306))
-    )
+    return db_pool.get_connection()
+
+
+@app.route("/api/test-db")
+def test_db():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT 1")
+    result = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    return {"database": "connected", "result": result[0]}
 
 @app.route("/api/questions", methods=["GET"])
 def get_questions():
@@ -49,18 +70,22 @@ def get_questions():
 
     return jsonify(rows)
 
-
 @app.route("/api/answer", methods=["POST"])
 def submit_answer():
+    import time
+
+    start = time.time()
+
     data = request.get_json()
 
     question_id = data["question_id"]
     user_answer = data["user_answer"]
 
     conn = get_connection()
+    print("Connection:", time.time() - start)
+
     cursor = conn.cursor(dictionary=True)
 
-    # Get the correct answer and explanation
     cursor.execute(
         """
         SELECT correct_option, explanation
@@ -71,20 +96,15 @@ def submit_answer():
     )
 
     result = cursor.fetchone()
+    print("SELECT:", time.time() - start)
 
-    # Question doesn't exist
     if result is None:
         cursor.close()
         conn.close()
-
         return "Not valid", 404
 
-    # Check answer
-    is_correct = (
-        user_answer == result["correct_option"]
-    )
+    is_correct = user_answer == result["correct_option"]
 
-    # Save attempt
     cursor.execute(
         """
         INSERT INTO results (questions_id, user_answer)
@@ -92,13 +112,12 @@ def submit_answer():
         """,
         (question_id, user_answer)
     )
-
     conn.commit()
-
     cursor.close()
     conn.close()
 
-    # Send result back to React
+    print("TOTAL:", time.time() - start)
+
     return jsonify({
         "correct": is_correct,
         "correct_answer": result["correct_option"],

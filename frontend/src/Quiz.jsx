@@ -21,6 +21,7 @@ function Quiz({onShowHistory, onshowStudy}) {
   const [feedback, setFeedback] = useState(null);
   const [score, setScore] = useState(0);
 
+
   // --- Coding-exercise specific state ---
   const [code, setCode] = useState("");
   const [pyodide, setPyodide] = useState(null);
@@ -140,14 +141,21 @@ function Quiz({onShowHistory, onshowStudy}) {
     return "";
   }
 
-  async function handleAnswer(answer) {
-    setSelected(answer);
-    const result = await submitAnswer(currentQuestion.id, answer);
-    setFeedback(result);
-    if (result.correct) {
-      setScore((prevScore) => prevScore + 1);
-    }
+async function handleAnswer(answer) {
+  console.time("answer");
+
+  setSelected(answer);
+
+  const result = await submitAnswer(currentQuestion.id, answer);
+
+  console.timeEnd("answer");
+
+  setFeedback(result);
+
+  if (result.correct) {
+    setScore((prevScore) => prevScore + 1);
   }
+}
 
   // Runs the code in-browser via Pyodide and checks it against expected_output.
   // Nothing here ever touches the Flask server — execution is entirely client-side.
