@@ -9,7 +9,7 @@ load_dotenv()  # only does anything locally; Render ignores this and uses its ow
 
 app = Flask(__name__)
 
-CORS(app, origins=[os.environ.get("FRONTEND_URL", "http://localhost:5173")])
+CORS(app, origins=[os.environ.get("FRONTEND_URL", "https://quiz-website-1-w7qv.onrender.com/")])
 
 
 db_pool = pooling.MySQLConnectionPool(
@@ -40,7 +40,7 @@ def test_db():
 
     return {"database": "connected", "result": result[0]}
 
-@app.route("/api/questions", methods=["GET"])
+@app.route('https://quiz-website-1-w7qv.onrender.com/api/questions', methods=["GET"])
 def get_questions():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
@@ -70,7 +70,7 @@ def get_questions():
 
     return jsonify(rows)
 
-@app.route("/api/answer", methods=["POST"])
+@app.route('https://quiz-website-1-w7qv.onrender.com/api/answer', methods=["POST"])
 def submit_answer():
     import time
 
@@ -125,7 +125,7 @@ def submit_answer():
     })
 
 
-@app.route("/api/history", methods=["GET"])
+@app.route('https://quiz-website-1-w7qv.onrender.com/api/history', methods=["GET"])
 def get_history():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
@@ -164,7 +164,7 @@ def get_history():
         "by_topic": by_topic
     })
 
-@app.route("/api/study", methods=["GET"])
+@app.route('https://quiz-website-1-w7qv.onrender.com/api/study', methods=["GET"])
 def get_study_content():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
