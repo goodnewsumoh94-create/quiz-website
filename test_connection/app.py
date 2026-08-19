@@ -9,7 +9,7 @@ load_dotenv()  # only does anything locally; Render ignores this and uses its ow
 
 app = Flask(__name__)
 
-CORS(app, origins=[os.environ.get("FRONTEND_URL", "http://localhost:5173")])
+CORS(app, origins=[os.environ.get("FRONTEND_URL", "https://quiz-website-ten-silk.vercel.app/")])
 
 
 db_pool = pooling.MySQLConnectionPool(
