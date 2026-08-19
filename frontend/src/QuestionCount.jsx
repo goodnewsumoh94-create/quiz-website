@@ -1,6 +1,10 @@
 function QuestionCount({ topic, maxQuestions, onStart }) {
 
-  const availableOptions = [5, 10, 20, 50];
+  // Build option steps dynamically instead of a fixed [5, 10, 20] list.
+  // Always includes 5 and 10 (if there's enough questions for them),
+  // then adds steps of 10 up to maxQuestions, and always offers "All".
+  const baseSteps = [5, 10, 15, 20, 30, 40, 50];
+  const availableOptions = baseSteps.filter(count => count < maxQuestions);
 
   return (
     <div className="home-card">
@@ -13,17 +17,23 @@ function QuestionCount({ topic, maxQuestions, onStart }) {
 
       <div className="topic-grid">
 
-        {availableOptions
-          .filter(count => count <= maxQuestions)
-          .map(count => (
-            <button
-              key={count}
-              className="topic-button"
-              onClick={() => onStart(count)}
-            >
-              {count} Questions
-            </button>
-          ))}
+        {availableOptions.map(count => (
+          <button
+            key={count}
+            className="topic-button"
+            onClick={() => onStart(count)}
+          >
+            {count} Questions
+          </button>
+        ))}
+
+        <button
+          key="all"
+          className="topic-button"
+          onClick={() => onStart(maxQuestions)}
+        >
+          All {maxQuestions} Questions
+        </button>
 
       </div>
 
