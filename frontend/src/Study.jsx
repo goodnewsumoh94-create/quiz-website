@@ -72,7 +72,6 @@ function Study({ onBack }) {
         <div className="study-card">
             <h2>{selectedSection.title}</h2>
             <p className="section-content">{selectedSection.content}</p>
-            <button onClick={() => setSelectedSection(null)}>← Back to Sections</button>
         </div>
     );
 }

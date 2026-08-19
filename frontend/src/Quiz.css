@@ -1114,6 +1114,55 @@ body {
   background-color: #3a3a5f;
 }
 
+.global-back-button {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 100;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.app-footer {
+  margin-top: 40px;
+  padding: 16px;
+  text-align: center;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}
+
+.auth-card {
+  max-width: 360px;
+  margin: 80px auto;
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.auth-card input {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.auth-error {
+  color: #d33;
+  font-size: 0.9rem;
+}
+
 /* =========================
    MOBILE
 ========================= */

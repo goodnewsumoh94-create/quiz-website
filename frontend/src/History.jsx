@@ -16,20 +16,25 @@ function History({ onBack }) {
     return <p>Loading history...</p>;
   }
 
-  const percentage = Math.round(
-    (history.overall.correct_attempts / history.overall.total_attempts) * 100
-  );
+  const hasAttempts = history.overall.total_attempts > 0;
+  const percentage = hasAttempts
+    ? Math.round((history.overall.correct_attempts / history.overall.total_attempts) * 100)
+    : 0;
 
   return (
     <div className="history-card">
       <h1>📊 Your Progress</h1>
 
-      <div className="overall-stat">
-        <span className="overall-percentage">{percentage}%</span>
-        <p>
-          {history.overall.correct_attempts} / {history.overall.total_attempts} correct overall
-        </p>
-      </div>
+      {hasAttempts ? (
+        <div className="overall-stat">
+          <span className="overall-percentage">{percentage}%</span>
+          <p>
+            {history.overall.correct_attempts} / {history.overall.total_attempts} correct overall
+          </p>
+        </div>
+      ) : (
+        <p>No attempts yet — go take a quiz!</p>
+      )}
 
       <div className="topic-list">
         {history.by_topic.map((topic) => {
@@ -45,8 +50,6 @@ function History({ onBack }) {
           );
         })}
       </div>
-
-      <button className="back" onClick={onBack}>← Back</button>
     </div>
   );
 }

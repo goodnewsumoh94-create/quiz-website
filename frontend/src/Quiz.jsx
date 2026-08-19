@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react";
-import { fetchQuestions, submitAnswer } from "./api";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";import { fetchQuestions, submitAnswer } from "./api";
 import QuizHome from "./QuizHome";
 import QuestionCount from "./QuestionCount.jsx";
 import "./Quiz.css";
 import Study from "./Study.jsx";
-
-function Quiz({onShowHistory, onshowStudy}) {
+const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange }, ref) {
   const [allQuestions, setAllQuestions] = useState([]);
   const [quizQuestions, setQuizQuestions] = useState([]);
 
@@ -73,6 +71,14 @@ function Quiz({onShowHistory, onshowStudy}) {
       setTimeUp(true);
     }
   }, [timeLeft, timeLimit]);
+
+  useEffect(() => {
+  if (onHomeChange) onHomeChange(!selectedTopic);
+}, [selectedTopic]);
+
+useImperativeHandle(ref, () => ({
+  goHome: chooseAnotherTopic
+}));
 
   function chooseAnotherTopic() {
     setSelectedTopic(null);
@@ -501,6 +507,6 @@ if (!selectedTopic) {
       )}
     </div>
   );
-}
+})
 
 export default Quiz;
