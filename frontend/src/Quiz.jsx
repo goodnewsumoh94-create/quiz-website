@@ -108,23 +108,35 @@ useImperativeHandle(ref, () => ({
     return shuffled;
   }
 
-  function startQuizWithCount(count) {
-    const topicQuestions = allQuestions.filter(
-  (q) =>
-    q.topic === selectedTopic &&
-    (quizMode === "coding" ? q.question_type === "coding" : q.question_type !== "coding")
-)
-    const shuffledQuestions = shuffleQuestions(topicQuestions);
-    const selectedQuestions = shuffledQuestions.slice(0, count);
+function startQuizWithCount(count) {
+  const topicQuestions = allQuestions.filter((q) => {
+    if (q.topic !== selectedTopic) return false;
 
-    setQuizQuestions(selectedQuestions);
-    setQuestionCount(count);
-    setCurrentIndex(0);
-    setScore(0);
-    setSelected(null);
-    setFeedback(null);
-    setTimeUp(false);
-  }
+    if (quizMode === "coding") {
+      return q.question_type === "coding";
+    }
+
+    if (quizMode === "debugging") {
+      return q.question_type === "debugging";
+    }
+
+    return q.question_type === "multiple_choice";
+  });
+
+  const shuffledQuestions = shuffleQuestions(topicQuestions);
+  const selectedQuestions = shuffledQuestions.slice(0, count);
+
+  setQuizQuestions(selectedQuestions);
+  setQuestionCount(count);
+  setCurrentIndex(0);
+  setScore(0);
+  setSelected(null);
+  setFeedback(null);
+  setCode("");
+  setCodeOutput("");
+  setCodeFeedback(null);
+  setTimeUp(false);
+}
 
   function groupByTopic(sections) {
   const grouped = {};
@@ -276,24 +288,34 @@ if (!selectedTopic) {
       <h2>How do you want to practice {selectedTopic}?</h2>
 
       <button onClick={() => setQuizMode("multiple_choice")}>
-        📝 Multiple Choice
-      </button>
+  📝 Multiple Choice
+</button>
 
-      {hasCodingQuestions && (
-        <button onClick={() => setQuizMode("coding")}>
-          💻 Coding Exercise
-        </button>
-      )}
+<button onClick={() => setQuizMode("coding")}>
+  💻 Coding Exercise
+</button>
+
+<button onClick={() => setQuizMode("debugging")}>
+  🐛 Debugging Challenge
+</button>
     </div>
   );
 }
 
   if (questionCount === null) {
-    const availableQuestions = allQuestions.filter(
-  (q) =>
-    q.topic === selectedTopic &&
-    (quizMode === "coding" ? q.question_type === "coding" : q.question_type !== "coding")
-)
+    const availableQuestions = allQuestions.filter((q) => {
+  if (q.topic !== selectedTopic) return false;
+
+  if (quizMode === "coding") {
+    return q.question_type === "coding";
+  }
+
+  if (quizMode === "debugging") {
+    return q.question_type === "debugging";
+  }
+
+  return q.question_type === "multiple_choice";
+});
     return (
       <QuestionCount
         topic={selectedTopic}
@@ -402,18 +424,32 @@ if (!selectedTopic) {
         ></div>
       </div>
 
-      <h2 className="question">{currentQuestion.question_text}</h2>
+<h2 className="question">
+    {currentQuestion.question_type === "debugging"
+        ? "🐛 Debug This Code"
+        : currentQuestion.question_text}
+</h2>
 
-      {currentQuestion.question_type === "coding" ? (
+{currentQuestion.question_type === "debugging" && (
+    <p className="debug-description">
+        {currentQuestion.question_text}
+    </p>
+)}
+      {currentQuestion.question_type === "coding" ||
+          currentQuestion.question_type === "debugging" ? (
         <div className="coding-question">
           <textarea
   className="code-editor"
   value={code}
   onChange={(e) => setCode(e.target.value)}
   onKeyDown={handleTabKey}
-  placeholder="Write your Python code here..."
+  placeholder={
+            currentQuestion.question_type === "debugging"
+                ? "Fix the code here..."
+                :"Write your Python code here..."
+  }
   spellCheck="false"
-  disabled={codeFeedback !== null}
+  disabled={codeFeedback?.correct === true}
 />
 
 
@@ -421,7 +457,10 @@ if (!selectedTopic) {
           <button
             className="run-code-button"
             onClick={currentQuestion.language === "python" ? handleRunCode : handleRunJsCode}
-            disabled={currentQuestion.language === "python" && !pyodideReady || codeFeedback !== null}
+disabled={
+  (currentQuestion.language === "python" && !pyodideReady) ||
+  codeFeedback?.correct === true
+}
           >
             {currentQuestion.language === "python" && !pyodideReady ? "Loading Python..." : "▶ Run Code"}
           </button>
@@ -437,9 +476,13 @@ if (!selectedTopic) {
               </p>
              {!codeFeedback.correct && (
   <div className="solution-reveal">
-    <p className="explanation">Expected output: {currentQuestion.expected_output}</p>
-    <p className="solution-label">Example solution:</p>
-    <pre className="solution-code">{currentQuestion.solution_code}</pre>
+    <p className="explanation">
+      Expected output: {currentQuestion.expected_output}
+    </p>
+
+    <p>
+      🐛 Your code isn't correct yet. Keep debugging!
+    </p>
   </div>
 )}
               <button className="next" onClick={handleNext}>
