@@ -148,7 +148,7 @@ def get_questions():
         SELECT
             id, topic, question_text, option_a, option_b, option_c, option_d,
             correct_option, explanation, question_type,
-            expected_output, solution_code, language
+            expected_output, solution_code, language, starter_code
         FROM questions
     """)
     rows = cursor.fetchall()

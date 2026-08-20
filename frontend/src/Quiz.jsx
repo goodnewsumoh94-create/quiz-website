@@ -50,6 +50,25 @@ const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange
     loadPyodideRuntime();
   }, []);
 
+  useEffect(() => {
+  const question = quizQuestions[currentIndex];
+
+  if (question?.question_type === "debugging") {
+    setCode(question.starter_code || "");
+  }
+}, [currentIndex, quizQuestions]);
+
+  useEffect(() => {
+  if (
+    currentQuestion &&
+    currentQuestion.question_type === "debugging"
+  ) {
+    setCode(currentQuestion.starter_code || "");
+  }
+}, [currentIndex, quizQuestions]);
+
+
+
   // Countdown timer
   useEffect(() => {
     if (timeLimit === null || timeLimit === 0 || quizQuestions.length === 0) {
@@ -76,6 +95,7 @@ const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange
   useEffect(() => {
   if (onHomeChange) onHomeChange(!selectedTopic);
 }, [selectedTopic]);
+
 
 useImperativeHandle(ref, () => ({
   goHome: chooseAnotherTopic
