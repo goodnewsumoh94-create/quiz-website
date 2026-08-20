@@ -12,7 +12,21 @@ load_dotenv()  # only does anything locally; Render ignores this and uses its ow
 
 app = Flask(__name__)
 
-CORS(app, origins=[os.environ.get("FRONTEND_URL", "https://quiz-website-ten-silk.vercel.app")])
+FRONTEND_URL = os.getenv(
+    "FRONTEND_URL",
+    "https://quiz-website-ten-silk.vercel.app"
+)
+
+CORS(
+    app,
+    resources={
+        r"/api/*": {
+            "origins": [FRONTEND_URL],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
+        }
+    }
+)
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-me")
 
