@@ -384,7 +384,7 @@ if (!selectedTopic) {
 
   return (
     <div className="quiz-card">
-      <h1>QUIZ</h1>
+      <h1>{selectedTopic} QUIZ</h1>
       <p className="question-count">
         Question {currentIndex + 1} of {quizQuestions.length}
       </p>
