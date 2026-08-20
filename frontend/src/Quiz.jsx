@@ -27,6 +27,7 @@ const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange
   const [codeOutput, setCodeOutput] = useState("");
   const [codeFeedback, setCodeFeedback] = useState(null); // { correct: bool }
   const [quizMode, setQuizMode] = useState(null);
+  const [showSolution, setShowSolution] = useState(false);
 
   // Load questions once on mount
   useEffect(() => {
@@ -261,6 +262,7 @@ function handleRunJsCode() {
     setCode("");
     setCodeOutput("");
     setCodeFeedback(null);
+    setShowSolution(false)
   }
 
   // ---- Guard clauses / screens ----
@@ -424,75 +426,154 @@ if (!selectedTopic) {
         ></div>
       </div>
 
-<h2 className="question">
-    {currentQuestion.question_type === "debugging"
-        ? "🐛 Debug This Code"
-        : currentQuestion.question_text}
-</h2>
-
 {currentQuestion.question_type === "debugging" && (
-    <p className="debug-description">
-        {currentQuestion.question_text}
-    </p>
+  <h2 className="question">
+    🐛 Debug This Code
+  </h2>
 )}
-      {currentQuestion.question_type === "coding" ||
-          currentQuestion.question_type === "debugging" ? (
-        <div className="coding-question">
-          <textarea
-  className="code-editor"
-  value={code}
-  onChange={(e) => setCode(e.target.value)}
-  onKeyDown={handleTabKey}
-  placeholder={
-            currentQuestion.question_type === "debugging"
-                ? "Fix the code here..."
-                :"Write your Python code here..."
-  }
-  spellCheck="false"
-  disabled={codeFeedback?.correct === true}
-/>
 
+{currentQuestion.question_type !== "coding" &&
+ currentQuestion.question_type !== "debugging" && (
+  <h2 className="question">
+    {currentQuestion.question_text}
+  </h2>
+)}
 
+{currentQuestion.question_type === "coding" ||
+ currentQuestion.question_type === "debugging" ? (
 
-          <button
-            className="run-code-button"
-            onClick={currentQuestion.language === "python" ? handleRunCode : handleRunJsCode}
-disabled={
-  (currentQuestion.language === "python" && !pyodideReady) ||
-  codeFeedback?.correct === true
-}
-          >
-            {currentQuestion.language === "python" && !pyodideReady ? "Loading Python..." : "▶ Run Code"}
+  <div className="coding-question">
+
+    <textarea
+      className="code-editor"
+      value={code}
+      onChange={(e) => setCode(e.target.value)}
+      onKeyDown={handleTabKey}
+      placeholder={
+        currentQuestion.question_type === "debugging"
+          ? "Fix the code here..."
+          : "Write your code here..."
+      }
+      spellCheck="false"
+      disabled={codeFeedback?.correct === true}
+    />
+
+    <button
+      className="run-code-button"
+      onClick={
+        currentQuestion.language === "python"
+          ? handleRunCode
+          : handleRunJsCode
+      }
+      disabled={
+        (currentQuestion.language === "python" && !pyodideReady) ||
+        codeFeedback?.correct === true
+      }
+    >
+      {currentQuestion.language === "python" && !pyodideReady
+        ? "Loading Python..."
+        : "▶ Run Code"}
+    </button>
+
+    {codeOutput && (
+      <pre className="code-output">
+        {codeOutput}
+      </pre>
+    )}
+
+    {codeFeedback && (
+      <div
+        className={`feedback ${
+          codeFeedback.correct
+            ? "correct-feedback"
+            : "wrong-feedback"
+        }`}
+      >
+
+        <p className="feedback-title">
+          {codeFeedback.correct
+            ? "✓ Correct!"
+            : currentQuestion.question_type === "debugging"
+              ? "✕ Not quite — keep debugging!"
+              : "✕ Output didn't match."}
+        </p>
+
+        {!codeFeedback.correct && (
+          <div className="solution-reveal">
+
+            <p className="explanation">
+              Expected output: {currentQuestion.expected_output}
+            </p>
+
+            {currentQuestion.question_type === "debugging" ? (
+              <>
+                <p className="debug-hint">
+                  🐛 Your code isn't correct yet.
+                  Try fixing the bug and run it again.
+                </p>
+
+                {!showSolution ? (
+                  <button
+                    className="show-solution-button"
+                    onClick={() => setShowSolution(true)}
+                  >
+                    💡 Show Solution
+                  </button>
+                ) : (
+                  <>
+                    <p className="solution-label">
+                      Example solution:
+                    </p>
+
+                    <pre className="solution-code">
+                      {currentQuestion.solution_code}
+                    </pre>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="solution-label">
+                  Example solution:
+                </p>
+
+                <pre className="solution-code">
+                  {currentQuestion.solution_code}
+                </pre>
+              </>
+            )}
+
+          </div>
+        )}
+
+        {codeFeedback.correct && (
+          <button className="next" onClick={handleNext}>
+            Next →
           </button>
+        )}
 
-          {codeOutput && (
-            <pre className="code-output">{codeOutput}</pre>
+        {!codeFeedback.correct &&
+          currentQuestion.question_type === "coding" && (
+            <button className="next" onClick={handleNext}>
+              Next →
+            </button>
           )}
 
-          {codeFeedback && (
-            <div className={`feedback ${codeFeedback.correct ? "correct-feedback" : "wrong-feedback"}`}>
-              <p className="feedback-title">
-                {codeFeedback.correct ? "✓ Correct!" : "✕ Output didn't match."}
-              </p>
-             {!codeFeedback.correct && (
-  <div className="solution-reveal">
-    <p className="explanation">
-      Expected output: {currentQuestion.expected_output}
-    </p>
+        {!codeFeedback.correct &&
+          currentQuestion.question_type === "debugging" &&
+          showSolution && (
+            <button className="next" onClick={handleNext}>
+              Next →
+            </button>
+          )}
 
-    <p>
-      🐛 Your code isn't correct yet. Keep debugging!
-    </p>
+      </div>
+    )}
+
   </div>
-)}
-              <button className="next" onClick={handleNext}>
-                Next →
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-        <>
+
+) : (
+    <>
           <div className="options">
             <button
               className={`option ${getOptionClass("A")}`}
@@ -531,21 +612,20 @@ disabled={
             </button>
           </div>
 
-          {feedback && (
-            <div className={`feedback ${feedback.correct ? "correct-feedback" : "wrong-feedback"}`}>
-              <p className="feedback-title">{feedback.correct ? "✓ Correct!" : "✕ Wrong!"}</p>
-              <p className="explanation">{feedback.explanation}</p>
-              <button className="next" onClick={handleNext}>
-                Next →
-              </button>
-            </div>
-          )}
+     {feedback && (
+  <div className={`feedback ${feedback.correct ? "correct-feedback" : "wrong-feedback"}`}>
+    <p className="feedback-title">
+      {feedback.correct ? "✓ Correct!" : "✕ Wrong!"}
+    </p>
 
-          {currentQuestion.solution_code ? (
-  <pre className="solution-code">{currentQuestion.solution_code}</pre>
-) : (
-  <p className="solution-code">No example solution available.</p>
+    <p className="explanation">{feedback.explanation}</p>
+
+    <button className="next" onClick={handleNext}>
+      Next →
+    </button>
+  </div>
 )}
+
         </>
       )}
     </div>
