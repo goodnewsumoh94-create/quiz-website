@@ -427,13 +427,24 @@ if (!selectedTopic) {
       </div>
 
 {currentQuestion.question_type === "debugging" && (
-  <h2 className="question">
-    🐛 Debug This Code
-  </h2>
+  <>
+    <h2 className="question">
+      🐛 Debug This Code
+    </h2>
+
+    <p className="coding-instruction">
+      {currentQuestion.question_text}
+    </p>
+  </>
 )}
 
-{currentQuestion.question_type !== "coding" &&
- currentQuestion.question_type !== "debugging" && (
+{currentQuestion.question_type === "coding" && (
+  <p className="coding-instruction">
+    {currentQuestion.question_text}
+  </p>
+)}
+
+{currentQuestion.question_type === "multiple_choice" && (
   <h2 className="question">
     {currentQuestion.question_text}
   </h2>
