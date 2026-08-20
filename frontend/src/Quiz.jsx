@@ -58,14 +58,7 @@ const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange
   }
 }, [currentIndex, quizQuestions]);
 
-  useEffect(() => {
-  if (
-    currentQuestion &&
-    currentQuestion.question_type === "debugging"
-  ) {
-    setCode(currentQuestion.starter_code || "");
-  }
-}, [currentIndex, quizQuestions]);
+
 
 
 
@@ -301,10 +294,6 @@ if (!selectedTopic) {
 }
 
   if (quizMode === null) {
-  const hasCodingQuestions = allQuestions.some(
-    (q) => q.topic === selectedTopic && q.question_type === "coding"
-  );
-
   return (
     <div className="mode-choice">
       <h2>How do you want to practice {selectedTopic}?</h2>
