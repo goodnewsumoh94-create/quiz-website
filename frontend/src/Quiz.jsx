@@ -27,8 +27,11 @@ const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange
   const [codeOutput, setCodeOutput] = useState("");
   const [codeFeedback, setCodeFeedback] = useState(null); // { correct: bool }
   const [quizMode, setQuizMode] = useState(null);
+  const [shuffledOptions, setShuffledOptions] = useState([]);
   const [showSolution, setShowSolution] = useState(false);
 
+
+  const currentQuestion = quizQuestions[currentIndex];
   // Load questions once on mount
   useEffect(() => {
     async function loadQuestions() {
@@ -50,17 +53,36 @@ const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange
     loadPyodideRuntime();
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
   const question = quizQuestions[currentIndex];
 
-  if (question?.question_type === "debugging") {
+  if (!question) return;
+
+  if (question.question_type === "debugging") {
     setCode(question.starter_code || "");
+  } else {
+    setCode("");
   }
 }, [currentIndex, quizQuestions]);
 
+useEffect(() => {
+  if (!currentQuestion || currentQuestion.question_type === "coding") return;
 
+  const options = [
+    { letter: "A", text: currentQuestion.option_a },
+    { letter: "B", text: currentQuestion.option_b },
+    { letter: "C", text: currentQuestion.option_c },
+    { letter: "D", text: currentQuestion.option_d },
+  ];
 
+  // Fisher-Yates shuffle
+  for (let i = options.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [options[i], options[j]] = [options[j], options[i]];
+  }
 
+  setShuffledOptions(options);
+}, [currentIndex]);
 
   // Countdown timer
   useEffect(() => {
@@ -413,8 +435,6 @@ if (!selectedTopic) {
     );
   }
 
-  const currentQuestion = quizQuestions[currentIndex];
-
   return (
     <div className="quiz-card">
       <h1>{selectedTopic} QUIZ</h1>
@@ -594,43 +614,19 @@ if (!selectedTopic) {
 
 ) : (
     <>
-          <div className="options">
-            <button
-              className={`option ${getOptionClass("A")}`}
-              onClick={() => handleAnswer("A")}
-              disabled={feedback !== null}
-            >
-              <span>A</span>
-              {currentQuestion.option_a}
-            </button>
-
-            <button
-              className={`option ${getOptionClass("B")}`}
-              onClick={() => handleAnswer("B")}
-              disabled={feedback !== null}
-            >
-              <span>B</span>
-              {currentQuestion.option_b}
-            </button>
-
-            <button
-              className={`option ${getOptionClass("C")}`}
-              onClick={() => handleAnswer("C")}
-              disabled={feedback !== null}
-            >
-              <span>C</span>
-              {currentQuestion.option_c}
-            </button>
-
-            <button
-              className={`option ${getOptionClass("D")}`}
-              onClick={() => handleAnswer("D")}
-              disabled={feedback !== null}
-            >
-              <span>D</span>
-              {currentQuestion.option_d}
-            </button>
-          </div>
+     <div className="options">
+  {shuffledOptions.map((option) => (
+    <button
+      key={option.letter}
+      className={`option ${getOptionClass(option.letter)}`}
+      onClick={() => handleAnswer(option.letter)}
+      disabled={feedback !== null}
+    >
+      <span>{option.letter}</span>
+      {option.text}
+    </button>
+  ))}
+</div>
 
      {feedback && (
   <div className={`feedback ${feedback.correct ? "correct-feedback" : "wrong-feedback"}`}>
