@@ -320,6 +320,55 @@ function handleRunJsCode() {
   }
 }
 
+
+function handleRunHtmlCode() {
+  try {
+    const parser = new DOMParser();
+    const userDoc = parser.parseFromString(code, "text/html");
+    const solutionDoc = parser.parseFromString(
+      currentQuestion.solution_code || "",
+      "text/html"
+    );
+
+    // Check for parser errors
+    const parserError = userDoc.querySelector("parsererror");
+
+    if (parserError) {
+      setCodeOutput("Invalid HTML");
+      setCodeFeedback({ correct: false });
+      return;
+    }
+
+    // Normalize HTML so whitespace doesn't matter
+    const normalizeHtml = (html) => {
+      return html
+        .replace(/>\s+</g, "><")
+        .replace(/\s+/g, " ")
+        .trim();
+    };
+
+    const userHtml = normalizeHtml(userDoc.body.innerHTML);
+    const solutionHtml = normalizeHtml(solutionDoc.body.innerHTML);
+
+    const isCorrect = userHtml === solutionHtml;
+
+    setCodeOutput(
+      isCorrect
+        ? "HTML structure is correct!"
+        : "The HTML still has an error."
+    );
+
+    setCodeFeedback({ correct: isCorrect });
+
+    if (isCorrect) {
+      setScore((prevScore) => prevScore + 1);
+    }
+  } catch (err) {
+    setCodeOutput("Error: " + err.message);
+    setCodeFeedback({ correct: false });
+  }
+}
+
   function handleNext() {
     setCurrentIndex(currentIndex + 1);
     setSelected(null);
@@ -531,10 +580,12 @@ if (!selectedTopic) {
     <button
       className="run-code-button"
       onClick={
-        currentQuestion.language === "python"
-          ? handleRunCode
-          : handleRunJsCode
-      }
+  currentQuestion.language === "python"
+    ? handleRunCode
+    : currentQuestion.language === "html"
+      ? handleRunHtmlCode
+      : handleRunJsCode
+}
       disabled={
         (currentQuestion.language === "python" && !pyodideReady) ||
         codeFeedback?.correct === true
@@ -571,9 +622,15 @@ if (!selectedTopic) {
         {!codeFeedback.correct && (
           <div className="solution-reveal">
 
-            <p className="explanation">
-              Expected output: {currentQuestion.expected_output}
-            </p>
+           {currentQuestion.language === "html" ? (
+  <p className="explanation">
+    Check the HTML structure and try again.
+  </p>
+) : (
+  <p className="explanation">
+    Expected output: {currentQuestion.expected_output}
+  </p>
+)}
 
             {currentQuestion.question_type === "debugging" ? (
               <>
