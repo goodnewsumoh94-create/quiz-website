@@ -45,7 +45,7 @@ const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange
     setCode("");
   }
 }, [currentQuestion]);
-  
+
   // Load questions once on mount
   useEffect(() => {
     async function loadQuestions() {
@@ -95,6 +95,24 @@ useEffect(() => {
 
   setShuffledOptions(withDisplayLetters);
 }, [currentIndex, quizQuestions]);
+
+// Load the correct starting code whenever a new coding/debugging question appears
+useEffect(() => {
+  if (!currentQuestion) return;
+
+  if (
+    currentQuestion.question_type === "coding" ||
+    currentQuestion.question_type === "debugging"
+  ) {
+    setCode(currentQuestion.starter_code || "");
+  } else {
+    setCode("");
+  }
+
+  setCodeOutput("");
+  setCodeFeedback(null);
+  setShowSolution(false);
+}, [currentQuestion]);
 
   // Countdown timer
   useEffect(() => {
