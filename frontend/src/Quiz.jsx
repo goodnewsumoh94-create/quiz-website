@@ -34,6 +34,18 @@ const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange
 
 
   const currentQuestion = quizQuestions[currentIndex];
+
+  useEffect(() => {
+  if (
+    currentQuestion &&
+    currentQuestion.question_type === "debugging"
+  ) {
+    setCode(currentQuestion.starter_code || "");
+  } else {
+    setCode("");
+  }
+}, [currentQuestion]);
+  
   // Load questions once on mount
   useEffect(() => {
     async function loadQuestions() {
@@ -55,17 +67,7 @@ const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange
     loadPyodideRuntime();
   }, []);
 
-useEffect(() => {
-  const question = quizQuestions[currentIndex];
 
-  if (!question) return;
-
-  if (question.question_type === "debugging") {
-    setCode(question.starter_code || "");
-  } else {
-    setCode("");
-  }
-}, [currentIndex, quizQuestions]);
 
 useEffect(() => {
   if (!currentQuestion || currentQuestion.question_type === "coding") return;
