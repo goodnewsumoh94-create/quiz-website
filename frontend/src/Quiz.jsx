@@ -75,14 +75,13 @@ useEffect(() => {
     { letter: "D", text: currentQuestion.option_d },
   ];
 
-  // Fisher-Yates shuffle
   for (let i = options.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [options[i], options[j]] = [options[j], options[i]];
   }
 
   setShuffledOptions(options);
-}, [currentIndex]);
+}, [currentIndex, quizQuestions]);
 
   // Countdown timer
   useEffect(() => {
@@ -467,7 +466,7 @@ if (!selectedTopic) {
   </>
 )}
 
-{currentQuestion.question_type === "coding" && (
+{currentQuestion.question_type === "coding" || currentQuestion.question_type === "debugging" && (
   <p className="coding-instruction">
     {currentQuestion.question_text}
   </p>
