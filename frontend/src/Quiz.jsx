@@ -1,8 +1,10 @@
-import { useState, useEffect, forwardRef, useImperativeHandle } from "react";import { fetchQuestions, submitAnswer } from "./api";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { fetchQuestions, submitAnswer } from "./api";
 import QuizHome from "./QuizHome";
 import QuestionCount from "./QuestionCount.jsx";
 import "./Quiz.css";
 import Study from "./Study.jsx";
+
 const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange }, ref) {
   const [allQuestions, setAllQuestions] = useState([]);
   const [quizQuestions, setQuizQuestions] = useState([]);
@@ -68,11 +70,14 @@ useEffect(() => {
 useEffect(() => {
   if (!currentQuestion || currentQuestion.question_type === "coding") return;
 
+  // originalLetter is what gets submitted to the backend (matches correct_option in the DB).
+  // displayLetter is reassigned below so the screen always shows A, B, C, D in order,
+  // regardless of which original option ends up in which slot.
   const options = [
-    { letter: "A", text: currentQuestion.option_a },
-    { letter: "B", text: currentQuestion.option_b },
-    { letter: "C", text: currentQuestion.option_c },
-    { letter: "D", text: currentQuestion.option_d },
+    { originalLetter: "A", text: currentQuestion.option_a },
+    { originalLetter: "B", text: currentQuestion.option_b },
+    { originalLetter: "C", text: currentQuestion.option_c },
+    { originalLetter: "D", text: currentQuestion.option_d },
   ];
 
   for (let i = options.length - 1; i > 0; i--) {
@@ -80,7 +85,13 @@ useEffect(() => {
     [options[i], options[j]] = [options[j], options[i]];
   }
 
-  setShuffledOptions(options);
+  const displayLetters = ["A", "B", "C", "D"];
+  const withDisplayLetters = options.map((option, index) => ({
+    ...option,
+    displayLetter: displayLetters[index],
+  }));
+
+  setShuffledOptions(withDisplayLetters);
 }, [currentIndex, quizQuestions]);
 
   // Countdown timer
@@ -186,20 +197,20 @@ function startQuizWithCount(count) {
   return grouped;
 }
 
-  function getOptionClass(option) {
+  function getOptionClass(displayLetter, originalLetter) {
     if (!feedback) return "";
-    if (option === selected && feedback.correct) return "correct";
-    if (option === selected && !feedback.correct) return "wrong";
-    if (!feedback.correct && option === feedback.correct_answer) return "correct";
+    if (displayLetter === selected && feedback.correct) return "correct";
+    if (displayLetter === selected && !feedback.correct) return "wrong";
+    if (!feedback.correct && originalLetter === feedback.correct_answer) return "correct";
     return "";
   }
 
-async function handleAnswer(answer) {
+async function handleAnswer(displayLetter, originalLetter) {
   console.time("answer");
 
-  setSelected(answer);
+  setSelected(displayLetter);
 
-  const result = await submitAnswer(currentQuestion.id, answer);
+  const result = await submitAnswer(currentQuestion.id, originalLetter);
 
   console.timeEnd("answer");
 
@@ -466,7 +477,7 @@ if (!selectedTopic) {
   </>
 )}
 
-{currentQuestion.question_type === "coding" || currentQuestion.question_type === "debugging" && (
+{currentQuestion.question_type === "coding" && (
   <p className="coding-instruction">
     {currentQuestion.question_text}
   </p>
@@ -616,12 +627,12 @@ if (!selectedTopic) {
      <div className="options">
   {shuffledOptions.map((option) => (
     <button
-      key={option.letter}
-      className={`option ${getOptionClass(option.letter)}`}
-      onClick={() => handleAnswer(option.letter)}
+      key={option.originalLetter}
+      className={`option ${getOptionClass(option.displayLetter, option.originalLetter)}`}
+      onClick={() => handleAnswer(option.displayLetter, option.originalLetter)}
       disabled={feedback !== null}
     >
-      <span>{option.letter}</span>
+      <span>{option.displayLetter}</span>
       {option.text}
     </button>
   ))}
