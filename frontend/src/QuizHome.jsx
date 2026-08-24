@@ -31,26 +31,10 @@ function QuizHome({ topics, onStart, onProjects, onHistory, onStudy }) {
 
         <button
           type="button"
-          className="view-history"
-          onClick={onHistory}
-        >
-           View History
-        </button>
-
-        <button
-          type="button"
-          className="study"
-          onClick={onStudy}
-        >
-           Study
-        </button>
-
-        <button
-          type="button"
           className="projects-button"
           onClick={onProjects}
         >
-           Projects
+          🛠️ Projects
         </button>
 
       </div>
