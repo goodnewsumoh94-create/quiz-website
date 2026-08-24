@@ -11,7 +11,6 @@ function QuizHome({ topics, onStart, onProjects }) {
       </p>
 
       <div className="topic-grid">
-
         {topics.map((topic) => (
           <button
             key={topic}
@@ -21,10 +20,10 @@ function QuizHome({ topics, onStart, onProjects }) {
             {topic}
           </button>
         ))}
-
       </div>
 
       <button
+        type="button"
         className="projects-button"
         onClick={onProjects}
       >

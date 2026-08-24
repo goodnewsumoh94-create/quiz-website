@@ -1679,16 +1679,29 @@ body {
   word-wrap: break-word;
 }
 
-.projects-home-button {
+.projects-button {
   display: block;
   width: 100%;
-  margin-top: 25px;
+  max-width: 300px;
+  margin: 25px auto 0;
   padding: 14px 20px;
+
   border: none;
-  border-radius: 10px;
-  cursor: pointer;
+  border-radius: 12px;
+
+  background: #6c63ff;
+  color: white;
+
   font-size: 16px;
   font-weight: 600;
+
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.projects-button:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
 }
 
 /* ---------- Footer ---------- */
