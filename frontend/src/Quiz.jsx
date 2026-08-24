@@ -229,6 +229,8 @@ function startQuizWithCount(count) {
     return "";
   }
 
+
+
 async function handleAnswer(displayLetter, originalLetter) {
   console.time("answer");
 

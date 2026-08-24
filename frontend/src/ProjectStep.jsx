@@ -4,49 +4,41 @@ import { useState, useEffect, useRef } from "react";
 // types come up (attribute checks, computed style checks, event-driven
 // checks like "click #add-btn and see a new <li>", etc.)
 function runChecks(doc, checks) {
-  if (!Array.isArray(checks)) {
-    console.error("Checks is not an array:", checks);
-    return false;
-  }
+  if (!Array.isArray(checks)) return false;
 
   return checks.every((check) => {
     try {
-      console.log("RUNNING CHECK:", check);
-
       if (check.type === "elementExists") {
-        const result = doc.querySelector(check.selector) !== null;
-        console.log(
-          "elementExists:",
-          check.selector,
-          result
-        );
-        return result;
+        return doc.querySelector(check.selector) !== null;
       }
-
       if (check.type === "textContent") {
         const el = doc.querySelector(check.selector);
         return el && el.textContent.includes(check.expected);
       }
-
       if (check.type === "attribute") {
         const el = doc.querySelector(check.selector);
-        return (
-          el &&
-          el.getAttribute(check.attribute) === check.expected
-        );
+        return el && el.getAttribute(check.attribute) === check.expected;
       }
-
       if (check.type === "count") {
-        return (
-          doc.querySelectorAll(check.selector).length >= check.min
-        );
+        return doc.querySelectorAll(check.selector).length >= check.min;
       }
-
-      console.error("Unknown check type:", check.type);
+      // NEW: simulate a real interaction, then assert on what happened.
+      // e.g. { type: "interaction", trigger: "#add-btn", event: "click",
+      //        assert: { type: "count", selector: "#todo-list li", min: 1 } }
+      if (check.type === "interaction") {
+        const trigger = doc.querySelector(check.trigger);
+        if (!trigger) return false;
+        if (check.value !== undefined) trigger.value = check.value; // for text inputs
+        const eventName = check.event || "click";
+        if (eventName === "click") {
+          trigger.click();
+        } else {
+          trigger.dispatchEvent(new Event(eventName, { bubbles: true }));
+        }
+        return runChecks(doc, [check.assert]);
+      }
       return false;
-
-    } catch (err) {
-      console.error("Check failed:", err);
+    } catch {
       return false;
     }
   });
@@ -74,6 +66,22 @@ export default function ProjectStep({
   setFeedback(null);
   setPreviewReady(false);
 }, [step.id]);
+
+
+  function handleRunSql() {
+  const normalize = (sql) =>
+    (sql || "").trim().replace(/\s+/g, " ").replace(/\s*;\s*$/, ";").toLowerCase();
+
+  const correct = normalize(code) === normalize(step.solution_code);
+  setOutput(correct ? "SQL query is correct!" : "The SQL query still has an error.");
+  setFeedback({ correct });
+  if (correct) onComplete();
+}
+
+// in the render, change the run button's onClick / disabled to route SQL too:
+// onClick={step.language === "python" ? handleRunPython : step.language === "sql" ? handleRunSql : handleCheckWebStep}
+// and change: const isWebStep = ["html", "css", "js"].includes(step.language);
+// (leave sql out of isWebStep so it doesn't try to render an iframe)
 
 
 
