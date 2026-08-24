@@ -441,7 +441,15 @@ if (!selectedTopic) {
     <div>
       <QuizHome topics={topics} onStart={startQuiz} />
       <button className="view-history" onClick={onShowHistory}>View History</button>
-      <button className="study" onClick={onshowStudy}>Study</button>
+<button
+  className="study"
+  onClick={() => {
+    console.log("Study clicked");
+    onshowStudy();
+  }}
+>
+  📚 Study
+</button>
     </div>
   );
 }
