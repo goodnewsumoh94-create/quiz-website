@@ -448,7 +448,7 @@ if (!selectedTopic) {
     onshowStudy();
   }}
 >
-  📚 Study
+  Study
 </button>
     </div>
   );
