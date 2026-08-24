@@ -119,6 +119,12 @@ export default function ProjectStep({
       }
     }
 
+    console.log("DEBUG doc body:", doc.body.innerHTML);
+    console.log("DEBUG parsed checks:", checks);
+    checks.forEach((c) => {
+      console.log("DEBUG check:", c.selector, "found:", doc.querySelector(c.selector));
+    });
+
     const correct =
       Array.isArray(checks) && checks.length > 0 && runChecks(doc, checks);
 
