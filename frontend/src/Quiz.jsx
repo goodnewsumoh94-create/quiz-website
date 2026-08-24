@@ -5,7 +5,7 @@ import QuestionCount from "./QuestionCount.jsx";
 import "./Quiz.css";
 import Study from "./Study.jsx";
 
-const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange, onShowProjects }, ref) {
+const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange, onShowProjects, pyodide, pyodideReady }, ref) {
   const [allQuestions, setAllQuestions] = useState([]);
   const [quizQuestions, setQuizQuestions] = useState([]);
 
@@ -24,8 +24,6 @@ const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange
 
   // --- Coding-exercise specific state ---
   const [code, setCode] = useState("");
-  const [pyodide, setPyodide] = useState(null);
-  const [pyodideReady, setPyodideReady] = useState(false);
   const [codeOutput, setCodeOutput] = useState("");
   const [codeFeedback, setCodeFeedback] = useState(null); // { correct: bool }
   const [quizMode, setQuizMode] = useState(null);
@@ -59,16 +57,6 @@ console.log("SOLUTION:", currentQuestion?.solution_code);
       setTopics(uniqueTopics);
     }
     loadQuestions();
-  }, []);
-
-  // Load Pyodide once on mount (separate from question data — unrelated concerns)
-  useEffect(() => {
-    async function loadPyodideRuntime() {
-      const pyodideInstance = await window.loadPyodide();
-      setPyodide(pyodideInstance);
-      setPyodideReady(true);
-    }
-    loadPyodideRuntime();
   }, []);
 
 

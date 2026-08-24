@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Quiz from "./Quiz";
 import History from "./History";
 import Study from "./Study.jsx";
@@ -11,9 +11,23 @@ import { isLoggedIn, getUsername, logout as apiLogout } from "./api";
 function App() {
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [username, setUsername] = useState(getUsername());
-const [view, setView] = useState("quiz");
+  const [view, setView] = useState("quiz");
   const [quizAtHome, setQuizAtHome] = useState(true);
   const quizRef = useRef(null);
+
+  // Pyodide lives here now, not inside Quiz, so both Quiz and Projects
+  // can share the same loaded instance instead of loading it twice.
+  const [pyodide, setPyodide] = useState(null);
+  const [pyodideReady, setPyodideReady] = useState(false);
+
+  useEffect(() => {
+    async function loadPyodideRuntime() {
+      const pyodideInstance = await window.loadPyodide();
+      setPyodide(pyodideInstance);
+      setPyodideReady(true);
+    }
+    loadPyodideRuntime();
+  }, []);
 
   function handleAuthed(name) {
     setLoggedIn(true);
@@ -40,47 +54,46 @@ const [view, setView] = useState("quiz");
   }
 
   function handlePracticeTopic(topic) {
-  setView("quiz");
-
-  setTimeout(() => {
-    quizRef.current?.startTopic(topic);
-  }, 0);
-}
+    setView("quiz");
+    setTimeout(() => {
+      quizRef.current?.startTopic(topic);
+    }, 0);
+  }
 
   const showBack = view !== "quiz" || !quizAtHome;
 
-let content;
+  let content;
 
-if (view === "history") {
-  content = <History onBack={() => setView("quiz")} />;
-
-} else if (view === "study") {
-  content = (
-    <Study
-      onBack={() => setView("quiz")}
-      onPracticeTopic={handlePracticeTopic}
-    />
-  );
-
-} else if (view === "projects") {
-  content = (
-    <Projects
-      onBack={() => setView("quiz")}
-    />
-  );
-
-} else {
-  content = (
-    <Quiz
-      ref={quizRef}
-      onShowHistory={() => setView("history")}
-      onshowStudy={() => setView("study")}
-      onShowProjects={() => setView("projects")}
-      onHomeChange={setQuizAtHome}
-    />
-  );
-}
-
+  if (view === "history") {
+    content = <History onBack={() => setView("quiz")} />;
+  } else if (view === "study") {
+    content = (
+      <Study
+        onBack={() => setView("quiz")}
+        onPracticeTopic={handlePracticeTopic}
+      />
+    );
+  } else if (view === "projects") {
+    content = (
+      <Projects
+        onBack={() => setView("quiz")}
+        pyodide={pyodide}
+        pyodideReady={pyodideReady}
+      />
+    );
+  } else {
+    content = (
+      <Quiz
+        ref={quizRef}
+        pyodide={pyodide}
+        pyodideReady={pyodideReady}
+        onShowHistory={() => setView("history")}
+        onshowStudy={() => setView("study")}
+        onShowProjects={() => setView("projects")}
+        onHomeChange={setQuizAtHome}
+      />
+    );
+  }
 
   return (
     <div className="app-shell">
