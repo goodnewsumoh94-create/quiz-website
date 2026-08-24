@@ -50,19 +50,6 @@ export default function ProjectStep({
   setPreviewReady(false);
 }, [step.id]);
 
-useEffect(() => {
-  if (!["html", "css", "js"].includes(step.language)) return;
-
-  setPreviewReady(false);
-
-  const timeout = setTimeout(() => {
-    if (iframeRef.current) {
-      iframeRef.current.srcdoc = previewDoc;
-    }
-  }, 100);
-
-  return () => clearTimeout(timeout);
-}, [previewDoc, step.language]);
 
 
   async function handleRunPython() {
@@ -85,13 +72,24 @@ useEffect(() => {
   }
 
   function handleCheckWebStep() {
-  const doc = iframeRef.current?.contentDocument;
+  const iframe = iframeRef.current;
 
-  if (!doc || !previewReady) {
-    setOutput("Preview is still loading — please wait a moment.");
+  console.log("IFRAME:", iframe);
+  console.log("CONTENT DOCUMENT:", iframe?.contentDocument);
+  console.log("PREVIEW READY:", previewReady);
+  console.log("PREVIEW DOC:", previewDoc);
+
+  const doc = iframe?.contentDocument;
+
+  if (!doc) {
+    setOutput("Could not access preview.");
     setFeedback({ correct: false });
     return;
   }
+
+  console.log("TODO INPUT:", doc.querySelector("#todo-input"));
+  console.log("ADD BUTTON:", doc.querySelector("#add-btn"));
+  console.log("TODO LIST:", doc.querySelector("#todo-list"));
 
   const checks = step.checks || [];
   const correct = checks.length > 0 && runChecks(doc, checks);
@@ -130,6 +128,7 @@ useEffect(() => {
             title="preview"
             className="live-preview"
             sandbox="allow-scripts"
+            srcDoc={previewDoc}
              onLoad={() => setPreviewReady(true)}
           />
         )}
