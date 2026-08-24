@@ -1679,31 +1679,40 @@ body {
   word-wrap: break-word;
 }
 
+/* =========================
+   PROJECTS BUTTON
+========================= */
+
 .projects-button {
-  display: block;
+  display: block !important;
+
   width: 100%;
   max-width: 300px;
+
   margin: 25px auto 0;
   padding: 14px 20px;
 
   border: none;
   border-radius: 12px;
 
-  background: #6c63ff;
-  color: white;
+  background: #6c63ff !important;
+  color: white !important;
 
   font-size: 16px;
   font-weight: 600;
 
   cursor: pointer;
+
+  visibility: visible !important;
+  opacity: 1 !important;
+
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .projects-button:hover {
   transform: translateY(-2px);
-  opacity: 0.9;
+  opacity: 0.9 !important;
 }
-
 /* ---------- Footer ---------- */
 
 .app-footer {

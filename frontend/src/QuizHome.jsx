@@ -1,6 +1,9 @@
 import "./Quiz.css";
 
 function QuizHome({ topics, onStart, onProjects }) {
+  console.log("QuizHome rendered");
+  console.log("onProjects:", onProjects);
+
   return (
     <div className="home-card">
 
@@ -22,12 +25,21 @@ function QuizHome({ topics, onStart, onProjects }) {
         ))}
       </div>
 
+      {/* PROJECTS BUTTON */}
       <button
         type="button"
         className="projects-button"
         onClick={onProjects}
       >
         🛠️ Projects
+      </button>
+
+      <button
+        type="button"
+        className="view-history"
+        onClick={() => {}}
+      >
+        View History
       </button>
 
     </div>

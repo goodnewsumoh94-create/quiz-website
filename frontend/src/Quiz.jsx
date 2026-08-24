@@ -507,20 +507,31 @@ function handleRunReactCode() {
   if (allQuestions.length === 0) {
     return <p>Loading...</p>;
   }
-if (!selectedTopic) {
+
+  if (!selectedTopic) {
   return (
     <div>
-      <QuizHome topics={topics} onStart={startQuiz} onProjects={onShowProjects} />
-      <button className="view-history" onClick={onShowHistory}>View History</button>
-<button
-  className="study"
-  onClick={() => {
-    console.log("Study clicked");
-    onshowStudy();
-  }}
->
-  Study
-</button>
+      <QuizHome
+        topics={topics}
+        onStart={startQuiz}
+        onProjects={onShowProjects}
+      />
+
+      <div style={{ textAlign: "center" }}>
+        <button
+          className="view-history"
+          onClick={onShowHistory}
+        >
+          View History
+        </button>
+
+        <button
+          className="study"
+          onClick={onshowStudy}
+        >
+          Study
+        </button>
+      </div>
     </div>
   );
 }
