@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import Quiz from "./Quiz";
 import History from "./History";
 import Study from "./Study.jsx";
-import Projects from "./Projects";
+import Projects from "./Projects.jsx";
 import Auth from "./Auth.jsx";
 import Footer from "./Footer.jsx";
 import BackButton from "./BackButton.jsx";
@@ -11,7 +11,7 @@ import { isLoggedIn, getUsername, logout as apiLogout } from "./api";
 function App() {
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [username, setUsername] = useState(getUsername());
-  const [view, setView] = useState("quiz");
+const [view, setView] = useState("quiz");
   const [quizAtHome, setQuizAtHome] = useState(true);
   const quizRef = useRef(null);
 
@@ -49,7 +49,6 @@ function App() {
 
   const showBack = view !== "quiz" || !quizAtHome;
 
-
 let content;
 
 if (view === "history") {
@@ -81,6 +80,7 @@ if (view === "history") {
     />
   );
 }
+
 
   return (
     <div className="app-shell">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchProjects } from "./api";
 import ProjectView from "./ProjectView";
+import "./Quiz.css";
 
 export default function Projects({ onBack, pyodide, pyodideReady }) {
   const [projects, setProjects] = useState([]);
@@ -37,37 +38,31 @@ export default function Projects({ onBack, pyodide, pyodideReady }) {
     return <p>Loading projects...</p>;
   }
 
-return (
-  <div className="projects-page">
-    <button className="another-topic-button" onClick={onBack}>
-      ← Back
-    </button>
+  return (
+    <div className="home-card">
+      <button className="another-topic-button" onClick={onBack}>
+        ← Back
+      </button>
 
-      <h1>Projects</h1>
-      <p>Build real projects while practicing what you've learned.</p>
+      <h1>🛠️ Projects</h1>
 
-      <div className="projects-grid">
+      <p className="home-subtitle">
+        Build real projects step by step and put your coding skills into practice.
+      </p>
+
+      <div className="topic-grid">
         {projects.map((project) => (
-          <div className="project-card" key={project.id}>
-            <h2>{project.title}</h2>
-
-            <p>{project.description}</p>
-
-            <p>
-              <strong>Topic:</strong> {project.topic}
-            </p>
-
-            <p>
-              <strong>Difficulty:</strong> {project.difficulty}
-            </p>
-
-            <button
-              className="run-code-button"
-              onClick={() => setSelectedProject(project)}
-            >
-              Start Project
-            </button>
-          </div>
+          <button
+            key={project.id}
+            className="topic-button"
+            onClick={() => setSelectedProject(project)}
+          >
+            <strong>{project.title}</strong>
+            <br />
+            <small>
+              {project.topic} · {project.difficulty}
+            </small>
+          </button>
         ))}
       </div>
     </div>
