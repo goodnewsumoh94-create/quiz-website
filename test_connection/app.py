@@ -267,7 +267,7 @@ def get_project_steps(project_id):
     cursor = conn.cursor(dictionary=True)
     cursor.execute("""
         SELECT id, step_number, instructions, starter_code,
-               solution_code, expected_output, language
+               solution_code, expected_output, language, checks
         FROM project_steps
         WHERE project_id = %s
         ORDER BY step_number

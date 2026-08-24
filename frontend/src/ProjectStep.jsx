@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 // Runs each check against the iframe's document. Extend this as new check
-// types come up (attribute checks, computed style checks, event-driven
-// checks like "click #add-btn and see a new <li>", etc.)
+// types come up (attribute checks, computed style checks, etc.)
 function runChecks(doc, checks) {
   if (!Array.isArray(checks)) return false;
 
@@ -22,7 +21,7 @@ function runChecks(doc, checks) {
       if (check.type === "count") {
         return doc.querySelectorAll(check.selector).length >= check.min;
       }
-      // NEW: simulate a real interaction, then assert on what happened.
+      // Simulates a real interaction, then asserts on what happened.
       // e.g. { type: "interaction", trigger: "#add-btn", event: "click",
       //        assert: { type: "count", selector: "#todo-list li", min: 1 } }
       if (check.type === "interaction") {
@@ -62,28 +61,10 @@ export default function ProjectStep({
   const [previewReady, setPreviewReady] = useState(false);
 
   useEffect(() => {
-  setOutput("");
-  setFeedback(null);
-  setPreviewReady(false);
-}, [step.id]);
-
-
-  function handleRunSql() {
-  const normalize = (sql) =>
-    (sql || "").trim().replace(/\s+/g, " ").replace(/\s*;\s*$/, ";").toLowerCase();
-
-  const correct = normalize(code) === normalize(step.solution_code);
-  setOutput(correct ? "SQL query is correct!" : "The SQL query still has an error.");
-  setFeedback({ correct });
-  if (correct) onComplete();
-}
-
-// in the render, change the run button's onClick / disabled to route SQL too:
-// onClick={step.language === "python" ? handleRunPython : step.language === "sql" ? handleRunSql : handleCheckWebStep}
-// and change: const isWebStep = ["html", "css", "js"].includes(step.language);
-// (leave sql out of isWebStep so it doesn't try to render an iframe)
-
-
+    setOutput("");
+    setFeedback(null);
+    setPreviewReady(false);
+  }, [step.id]);
 
   async function handleRunPython() {
     if (!pyodide) return;
@@ -104,59 +85,64 @@ export default function ProjectStep({
     }
   }
 
-  function handleCheckWebStep() {
-  const iframe = iframeRef.current;
-  const doc = iframe?.contentDocument;
+  function handleRunSql() {
+    const normalize = (sql) =>
+      (sql || "").trim().replace(/\s+/g, " ").replace(/\s*;\s*$/, ";").toLowerCase();
 
-  console.log("CHECK STEP");
-  console.log("STEP:", step);
-  console.log("RAW CHECKS:", step.checks);
-  console.log("CHECKS TYPE:", typeof step.checks);
-  console.log("CONTENT DOCUMENT:", doc);
-
-  if (!doc) {
-    setOutput("Preview not ready yet — try again in a moment.");
-    setFeedback({ correct: false });
-    return;
+    const correct = normalize(code) === normalize(step.solution_code);
+    setOutput(correct ? "SQL query is correct!" : "The SQL query still has an error.");
+    setFeedback({ correct });
+    if (correct) onComplete();
   }
 
-  // Make sure checks are always an array
-  let checks = step.checks || [];
+  function handleCheckWebStep() {
+    const iframe = iframeRef.current;
+    const doc = iframe?.contentDocument;
 
-  if (typeof checks === "string") {
-    try {
-      checks = JSON.parse(checks);
-    } catch (err) {
-      console.error("Could not parse checks:", err);
-      setOutput("There is a problem with this project's checks.");
+    if (!doc) {
+      setOutput("Preview not ready yet — try again in a moment.");
       setFeedback({ correct: false });
       return;
     }
+
+    // Make sure checks are always an array (mysql-connector can return
+    // JSON columns as either a parsed value or a raw string depending on version).
+    let checks = step.checks || [];
+    if (typeof checks === "string") {
+      try {
+        checks = JSON.parse(checks);
+      } catch (err) {
+        console.error("Could not parse checks:", err);
+        setOutput("There is a problem with this project's checks.");
+        setFeedback({ correct: false });
+        return;
+      }
+    }
+
+    const correct =
+      Array.isArray(checks) && checks.length > 0 && runChecks(doc, checks);
+
+    setOutput(
+      correct
+        ? "All checks passed!"
+        : "Not quite there yet — check the requirements above."
+    );
+    setFeedback({ correct });
+    if (correct) onComplete();
   }
-
-  console.log("PARSED CHECKS:", checks);
-
-  const correct =
-    Array.isArray(checks) &&
-    checks.length > 0 &&
-    runChecks(doc, checks);
-
-  console.log("CHECK RESULT:", correct);
-
-  setOutput(
-    correct
-      ? "All checks passed!"
-      : "Not quite there yet — check the requirements above."
-  );
-
-  setFeedback({ correct });
-
-  if (correct) {
-    onComplete();
-  }
-}
 
   const isWebStep = ["html", "css", "js"].includes(step.language);
+  const isSqlStep = step.language === "sql";
+
+  function handleRunClick() {
+    if (step.language === "python") return handleRunPython();
+    if (isSqlStep) return handleRunSql();
+    return handleCheckWebStep();
+  }
+
+  const isLoading =
+    (step.language === "python" && !pyodideReady) ||
+    (isWebStep && !previewReady);
 
   return (
     <div className="project-step">
@@ -165,39 +151,35 @@ export default function ProjectStep({
 
       <div className={isWebStep ? "web-step-layout" : "coding-question"}>
         <textarea
-           className="code-editor"
-  value={code}
-  onChange={(e) => onCodeChange(e.target.value)}
+          className="code-editor"
+          value={code}
+          onChange={(e) => onCodeChange(e.target.value)}
           spellCheck="false"
           disabled={isCompleted}
         />
 
         {isWebStep && (
           <iframe
-  ref={iframeRef}
-  title="preview"
-  className="live-preview"
-  sandbox="allow-scripts allow-same-origin"
-  srcDoc={previewDoc}
-  onLoad={() => setPreviewReady(true)}
-/>
+            ref={iframeRef}
+            title="preview"
+            className="live-preview"
+            sandbox="allow-scripts allow-same-origin"
+            srcDoc={previewDoc}
+            onLoad={() => setPreviewReady(true)}
+          />
         )}
       </div>
 
       <button
         className="run-code-button"
-        onClick={step.language === "python" ? handleRunPython : handleCheckWebStep}
-        disabled={
-  isCompleted ||
-  (step.language === "python" && !pyodideReady) ||
-  (isWebStep && !previewReady)
-}
+        onClick={handleRunClick}
+        disabled={isCompleted || isLoading}
       >
         {step.language === "python" && !pyodideReady
-  ? "Loading Python..."
-  : isWebStep && !previewReady
-  ? "Loading Preview..."
-  : "▶ Check Step"}
+          ? "Loading Python..."
+          : isWebStep && !previewReady
+          ? "Loading Preview..."
+          : "▶ Check Step"}
       </button>
 
       {output && <pre className="code-output">{output}</pre>}
