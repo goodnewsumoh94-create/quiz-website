@@ -29,10 +29,7 @@ function History({ onBack }) {
       <div className="history-card">
         <h1>📊 Your Progress</h1>
         <p>{error}</p>
-
-        <button onClick={onBack}>
-          ← Back
-        </button>
+        
       </div>
     );
   }
