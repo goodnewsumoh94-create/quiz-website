@@ -369,6 +369,46 @@ function handleRunHtmlCode() {
   }
 }
 
+function handleRunCssCode() {
+  try {
+    const userCss = code.trim();
+    const solutionCss = (currentQuestion.solution_code || "").trim();
+
+    // Normalize CSS so whitespace and formatting don't matter.
+    const normalizeCss = (css) => {
+      return css
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/\s+/g, " ")
+        .replace(/\s*{\s*/g, "{")
+        .replace(/\s*}\s*/g, "}")
+        .replace(/\s*:\s*/g, ":")
+        .replace(/\s*;\s*/g, ";")
+        .replace(/\s*,\s*/g, ",")
+        .trim();
+    };
+
+    const normalizedUser = normalizeCss(userCss);
+    const normalizedSolution = normalizeCss(solutionCss);
+
+    const isCorrect = normalizedUser === normalizedSolution;
+
+    setCodeOutput(
+      isCorrect
+        ? "CSS is correct!"
+        : "The CSS still has an error."
+    );
+
+    setCodeFeedback({ correct: isCorrect });
+
+    if (isCorrect) {
+      setScore((prevScore) => prevScore + 1);
+    }
+  } catch (err) {
+    setCodeOutput("Error: " + err.message);
+    setCodeFeedback({ correct: false });
+  }
+}
+
   function handleNext() {
     setCurrentIndex(currentIndex + 1);
     setSelected(null);
@@ -584,6 +624,8 @@ if (!selectedTopic) {
     ? handleRunCode
     : currentQuestion.language === "html"
       ? handleRunHtmlCode
+       : currentQuestion.language === "css"
+        ? handleRunCssCode
       : handleRunJsCode
 }
       disabled={
