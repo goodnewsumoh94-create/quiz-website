@@ -250,5 +250,85 @@ def get_study_content():
     return jsonify(rows)
 
 
+@app.route("/api/projects", methods=["GET"])
+def get_projects():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT id, title, description, topic, difficulty FROM projects")
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(rows)
+
+
+@app.route("/api/projects/<int:project_id>/steps", methods=["GET"])
+def get_project_steps(project_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT id, step_number, instructions, starter_code,
+               solution_code, expected_output, language
+        FROM project_steps
+        WHERE project_id = %s
+        ORDER BY step_number
+    """, (project_id,))
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(rows)
+
+
+
+
+@app.route("/api/project-progress/<int:project_id>", methods=["GET"])
+@require_auth
+def get_project_progress(project_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT step_number FROM project_progress
+        WHERE user_id = %s AND project_id = %s
+    """, (request.user_id, project_id))
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify([r["step_number"] for r in rows])
+
+
+@app.route("/api/project-progress", methods=["POST"])
+@require_auth
+def save_project_progress():
+    data = request.get_json()
+    project_id = data["project_id"]
+    step_number = data["step_number"]
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Enforce sequential unlocking server-side: you can only complete step N
+    # if you've already completed step N-1 (or you're completing step 1).
+    if step_number > 1:
+        cursor.execute("""
+            SELECT 1 FROM project_progress
+            WHERE user_id = %s AND project_id = %s AND step_number = %s
+        """, (request.user_id, project_id, step_number - 1))
+        if cursor.fetchone() is None:
+            cursor.close()
+            conn.close()
+            return jsonify({"error": "Previous step not completed yet"}), 400
+
+    cursor.execute("""
+        INSERT INTO project_progress (user_id, project_id, step_number)
+        VALUES (%s, %s, %s)
+        ON DUPLICATE KEY UPDATE completed_at = CURRENT_TIMESTAMP
+    """, (request.user_id, project_id, step_number))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({"status": "saved"})
+
+
+
 if __name__ == "__main__":
     app.run(debug=True)
