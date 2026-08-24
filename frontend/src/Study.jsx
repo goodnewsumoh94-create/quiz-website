@@ -15,7 +15,7 @@ function groupByTopic(sections) {
   return grouped;
 }
 
-function Study({ onBack }) {
+function Study({ onBack, onPracticeTopic }) {
   const [allSections, setAllSections] = useState([]);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
@@ -120,25 +120,41 @@ function Study({ onBack }) {
 
   // Screen 3: Read section
   return (
-    <div className="study-card">
+  <div className="study-card">
+
+    <button
+      className="study-back-button"
+      onClick={() => setSelectedSection(null)}
+    >
+      ← Back to Sections
+    </button>
+
+    <h1>{selectedSection.title}</h1>
+
+    <div className="study-content">
+      <p className="section-content">
+        {selectedSection.content}
+      </p>
+    </div>
+
+    <div className="study-practice">
+      <h3>Ready to practice?</h3>
+
+      <p>
+        Test what you've learned with a {selectedTopic} quiz.
+      </p>
 
       <button
-        className="study-back-button"
-        onClick={() => setSelectedSection(null)}
+        className="practice-topic-button"
+        onClick={() => onPracticeTopic(selectedTopic)}
       >
-        ← Back to Sections
+        📝 Practice {selectedTopic}
       </button>
-
-      <h1>{selectedSection.title}</h1>
-
-      <div className="study-content">
-        <p className="section-content">
-          {selectedSection.content}
-        </p>
-      </div>
-
     </div>
-  );
+
+  </div>
+);
 }
+
 
 export default Study;

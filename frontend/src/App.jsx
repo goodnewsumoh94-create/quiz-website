@@ -38,13 +38,25 @@ function App() {
     }
   }
 
+  function handlePracticeTopic(topic) {
+  setView("quiz");
+
+  setTimeout(() => {
+    quizRef.current?.startTopic(topic);
+  }, 0);
+}
+
   const showBack = view !== "quiz" || !quizAtHome;
 
   let content;
   if (view === "history") {
     content = <History onBack={() => setView("quiz")} />;
   } else if (view === "study") {
-    content = <Study onBack={() => setView("quiz")} />;
+    content = (
+        <Study onBack={() => setView("quiz")}
+        onPracticeTopic={handlePracticeTopic()}
+        />
+    );
   } else {
     content = (
       <Quiz

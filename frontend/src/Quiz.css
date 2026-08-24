@@ -1474,6 +1474,55 @@ body {
   }
 }
 
+/* =========================
+   STUDY PRACTICE BUTTON
+========================= */
+
+.study-practice {
+  margin-top: 25px;
+  padding: 22px;
+
+  text-align: center;
+
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 15px;
+}
+
+.study-practice h3 {
+  margin: 0 0 8px;
+  color: #3730a3;
+}
+
+.study-practice p {
+  margin: 0 0 16px;
+  color: #64748b;
+}
+
+.practice-topic-button {
+  padding: 13px 22px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #4f46e5;
+  color: white;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.practice-topic-button:hover {
+  background: #3730a3;
+  transform: translateY(-2px);
+
+  box-shadow: 0 6px 15px rgba(79, 70, 229, 0.25);
+}
+
 /* ---------- Global back button ---------- */
 
 .global-back-button {

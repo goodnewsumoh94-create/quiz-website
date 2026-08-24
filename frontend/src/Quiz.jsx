@@ -143,7 +143,19 @@ useEffect(() => {
 
 
 useImperativeHandle(ref, () => ({
-  goHome: chooseAnotherTopic
+  goHome: chooseAnotherTopic,
+
+  startTopic: (topic) => {
+    setSelectedTopic(topic);
+    setQuestionCount(null);
+    setQuizMode(null);
+    setQuizQuestions([]);
+    setCurrentIndex(0);
+    setScore(0);
+    setSelected(null);
+    setFeedback(null);
+    setTimeUp(false);
+  }
 }));
 
   function chooseAnotherTopic() {
