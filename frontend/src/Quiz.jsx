@@ -458,6 +458,40 @@ function handleRunSqlCode() {
   }
 }
 
+function handleRunReactCode() {
+  try {
+    const normalizeReact = (source) => {
+      return source
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/\/\/.*$/gm, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    };
+
+    const userCode = normalizeReact(code);
+    const solutionCode = normalizeReact(
+      currentQuestion.solution_code || ""
+    );
+
+    const isCorrect = userCode === solutionCode;
+
+    setCodeOutput(
+      isCorrect
+        ? "React code is correct!"
+        : "The React code still has an error."
+    );
+
+    setCodeFeedback({ correct: isCorrect });
+
+    if (isCorrect) {
+      setScore((prevScore) => prevScore + 1);
+    }
+  } catch (err) {
+    setCodeOutput("Error: " + err.message);
+    setCodeFeedback({ correct: false });
+  }
+}
+
   function handleNext() {
     setCurrentIndex(currentIndex + 1);
     setSelected(null);
@@ -677,17 +711,17 @@ if (!selectedTopic) {
     <button
       className="run-code-button"
 onClick={
-  currentQuestion.language === "python"
-    ? handleRunCode
-    : currentQuestion.language === "javascript"
-      ? handleRunJsCode
+  currentQuestion.topic === "React"
+    ? handleRunReactCode
+    : currentQuestion.language === "python"
+      ? handleRunCode
       : currentQuestion.language === "html"
         ? handleRunHtmlCode
         : currentQuestion.language === "css"
           ? handleRunCssCode
-          : currentQuestion.language === "mysql"
+          : currentQuestion.language === "sql"
             ? handleRunSqlCode
-              : handleRunJsCode
+            : handleRunJsCode
 }
       disabled={
         (currentQuestion.language === "python" && !pyodideReady) ||
