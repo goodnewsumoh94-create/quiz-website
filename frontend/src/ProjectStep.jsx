@@ -4,24 +4,49 @@ import { useState, useEffect, useRef } from "react";
 // types come up (attribute checks, computed style checks, event-driven
 // checks like "click #add-btn and see a new <li>", etc.)
 function runChecks(doc, checks) {
+  if (!Array.isArray(checks)) {
+    console.error("Checks is not an array:", checks);
+    return false;
+  }
+
   return checks.every((check) => {
     try {
+      console.log("RUNNING CHECK:", check);
+
       if (check.type === "elementExists") {
-        return doc.querySelector(check.selector) !== null;
+        const result = doc.querySelector(check.selector) !== null;
+        console.log(
+          "elementExists:",
+          check.selector,
+          result
+        );
+        return result;
       }
+
       if (check.type === "textContent") {
         const el = doc.querySelector(check.selector);
         return el && el.textContent.includes(check.expected);
       }
+
       if (check.type === "attribute") {
         const el = doc.querySelector(check.selector);
-        return el && el.getAttribute(check.attribute) === check.expected;
+        return (
+          el &&
+          el.getAttribute(check.attribute) === check.expected
+        );
       }
+
       if (check.type === "count") {
-        return doc.querySelectorAll(check.selector).length >= check.min;
+        return (
+          doc.querySelectorAll(check.selector).length >= check.min
+        );
       }
+
+      console.error("Unknown check type:", check.type);
       return false;
-    } catch {
+
+    } catch (err) {
+      console.error("Check failed:", err);
       return false;
     }
   });
@@ -73,26 +98,42 @@ export default function ProjectStep({
 
   function handleCheckWebStep() {
   const iframe = iframeRef.current;
-
-  console.log("IFRAME:", iframe);
-  console.log("CONTENT DOCUMENT:", iframe?.contentDocument);
-  console.log("PREVIEW READY:", previewReady);
-  console.log("PREVIEW DOC:", previewDoc);
-
   const doc = iframe?.contentDocument;
 
+  console.log("CHECK STEP");
+  console.log("STEP:", step);
+  console.log("RAW CHECKS:", step.checks);
+  console.log("CHECKS TYPE:", typeof step.checks);
+  console.log("CONTENT DOCUMENT:", doc);
+
   if (!doc) {
-    setOutput("Could not access preview.");
+    setOutput("Preview not ready yet — try again in a moment.");
     setFeedback({ correct: false });
     return;
   }
 
-  console.log("TODO INPUT:", doc.querySelector("#todo-input"));
-  console.log("ADD BUTTON:", doc.querySelector("#add-btn"));
-  console.log("TODO LIST:", doc.querySelector("#todo-list"));
+  // Make sure checks are always an array
+  let checks = step.checks || [];
 
-  const checks = step.checks || [];
-  const correct = checks.length > 0 && runChecks(doc, checks);
+  if (typeof checks === "string") {
+    try {
+      checks = JSON.parse(checks);
+    } catch (err) {
+      console.error("Could not parse checks:", err);
+      setOutput("There is a problem with this project's checks.");
+      setFeedback({ correct: false });
+      return;
+    }
+  }
+
+  console.log("PARSED CHECKS:", checks);
+
+  const correct =
+    Array.isArray(checks) &&
+    checks.length > 0 &&
+    runChecks(doc, checks);
+
+  console.log("CHECK RESULT:", correct);
 
   setOutput(
     correct
@@ -106,6 +147,7 @@ export default function ProjectStep({
     onComplete();
   }
 }
+
   const isWebStep = ["html", "css", "js"].includes(step.language);
 
   return (
