@@ -421,6 +421,39 @@ function handleRunCssCode() {
   }
 }
 
+
+function handleRunSqlCode() {
+  try {
+    const userSql = code
+      .trim()
+      .replace(/\s+/g, " ")
+      .replace(/\s*;\s*$/, ";");
+
+    const solutionSql = (currentQuestion.solution_code || "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .replace(/\s*;\s*$/, ";");
+
+    const isCorrect =
+      userSql.toLowerCase() === solutionSql.toLowerCase();
+
+    setCodeOutput(
+      isCorrect
+        ? "SQL query is correct!"
+        : "The SQL query still has an error."
+    );
+
+    setCodeFeedback({ correct: isCorrect });
+
+    if (isCorrect) {
+      setScore((prevScore) => prevScore + 1);
+    }
+  } catch (err) {
+    setCodeOutput("Error: " + err.message);
+    setCodeFeedback({ correct: false });
+  }
+}
+
   function handleNext() {
     setCurrentIndex(currentIndex + 1);
     setSelected(null);
@@ -639,14 +672,18 @@ if (!selectedTopic) {
 
     <button
       className="run-code-button"
-      onClick={
+onClick={
   currentQuestion.language === "python"
     ? handleRunCode
-    : currentQuestion.language === "html"
-      ? handleRunHtmlCode
-       : currentQuestion.language === "css"
-        ? handleRunCssCode
-      : handleRunJsCode
+    : currentQuestion.language === "javascript"
+      ? handleRunJsCode
+      : currentQuestion.language === "html"
+        ? handleRunHtmlCode
+        : currentQuestion.language === "css"
+          ? handleRunCssCode
+          : currentQuestion.language === "mysql"
+            ? handleRunSqlCode
+              : handleRunJsCode
 }
       disabled={
         (currentQuestion.language === "python" && !pyodideReady) ||
