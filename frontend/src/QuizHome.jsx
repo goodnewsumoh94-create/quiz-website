@@ -26,13 +26,17 @@ function QuizHome({ topics, onStart, onProjects }) {
       </div>
 
       {/* PROJECTS BUTTON */}
-      <button
-        type="button"
-        className="projects-button"
-        onClick={onProjects}
-      >
-        🛠️ Projects
-      </button>
+      <p style={{ color: "red", fontSize: "20px" }}>
+  TEST PROJECTS BUTTON
+</p>
+
+<button
+  type="button"
+  className="projects-button"
+  onClick={onProjects}
+>
+  🛠️ Projects
+</button>
 
       <button
         type="button"

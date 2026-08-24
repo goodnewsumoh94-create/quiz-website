@@ -1,6 +1,6 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { fetchQuestions, submitAnswer } from "./api";
-import QuizHome from "./QuizHome";
+import QuizHome from "./QuizHome.jsx";
 import QuestionCount from "./QuestionCount.jsx";
 import "./Quiz.css";
 import Study from "./Study.jsx";
