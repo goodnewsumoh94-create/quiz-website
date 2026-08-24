@@ -35,6 +35,10 @@ const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange
 
   const currentQuestion = quizQuestions[currentIndex];
 
+  console.log("CURRENT DEBUG QUESTION:", currentQuestion);
+console.log("LANGUAGE:", currentQuestion?.language);
+console.log("SOLUTION:", currentQuestion?.solution_code);
+
   useEffect(() => {
   if (
     currentQuestion &&
