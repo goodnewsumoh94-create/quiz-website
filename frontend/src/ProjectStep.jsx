@@ -42,20 +42,24 @@ export default function ProjectStep({
   const [output, setOutput] = useState("");
   const [feedback, setFeedback] = useState(null); // { correct: bool }
   const iframeRef = useRef(null);
+  const [previewReady, setPreviewReady] = useState(false);
 
   useEffect(() => {
   setOutput("");
   setFeedback(null);
+  setPreviewReady(false);
 }, [step.id]);
 
 useEffect(() => {
   if (!["html", "css", "js"].includes(step.language)) return;
 
+  setPreviewReady(false);
+
   const timeout = setTimeout(() => {
     if (iframeRef.current) {
       iframeRef.current.srcdoc = previewDoc;
     }
-  }, 300);
+  }, 100);
 
   return () => clearTimeout(timeout);
 }, [previewDoc, step.language]);
@@ -81,19 +85,29 @@ useEffect(() => {
   }
 
   function handleCheckWebStep() {
-    const doc = iframeRef.current?.contentDocument;
-    if (!doc) {
-      setOutput("Preview not ready yet — try again in a moment.");
-      setFeedback({ correct: false });
-      return;
-    }
-    const checks = step.checks || [];
-    const correct = checks.length > 0 && runChecks(doc, checks);
-    setOutput(correct ? "All checks passed!" : "Not quite there yet — check the requirements above.");
-    setFeedback({ correct });
-    if (correct) onComplete();
+  const doc = iframeRef.current?.contentDocument;
+
+  if (!doc || !previewReady) {
+    setOutput("Preview is still loading — please wait a moment.");
+    setFeedback({ correct: false });
+    return;
   }
 
+  const checks = step.checks || [];
+  const correct = checks.length > 0 && runChecks(doc, checks);
+
+  setOutput(
+    correct
+      ? "All checks passed!"
+      : "Not quite there yet — check the requirements above."
+  );
+
+  setFeedback({ correct });
+
+  if (correct) {
+    onComplete();
+  }
+}
   const isWebStep = ["html", "css", "js"].includes(step.language);
 
   return (
@@ -116,6 +130,7 @@ useEffect(() => {
             title="preview"
             className="live-preview"
             sandbox="allow-scripts"
+             onLoad={() => setPreviewReady(true)}
           />
         )}
       </div>
@@ -124,10 +139,16 @@ useEffect(() => {
         className="run-code-button"
         onClick={step.language === "python" ? handleRunPython : handleCheckWebStep}
         disabled={
-          isCompleted || (step.language === "python" && !pyodideReady)
-        }
+  isCompleted ||
+  (step.language === "python" && !pyodideReady) ||
+  (isWebStep && !previewReady)
+}
       >
-        {step.language === "python" && !pyodideReady ? "Loading Python..." : "▶ Check Step"}
+        {step.language === "python" && !pyodideReady
+  ? "Loading Python..."
+  : isWebStep && !previewReady
+  ? "Loading Preview..."
+  : "▶ Check Step"}
       </button>
 
       {output && <pre className="code-output">{output}</pre>}

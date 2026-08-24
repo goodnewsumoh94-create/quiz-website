@@ -34,7 +34,7 @@ function QuizHome({ topics, onStart, onProjects, onHistory, onStudy }) {
           className="projects-button"
           onClick={onProjects}
         >
-          🛠️ Projects
+           Projects
         </button>
 
       </div>
