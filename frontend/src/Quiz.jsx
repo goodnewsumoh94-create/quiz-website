@@ -675,32 +675,42 @@ if (!selectedTopic) {
 )}
 
             {currentQuestion.question_type === "debugging" ? (
-              <>
-                <p className="debug-hint">
-                  🐛 Your code isn't correct yet.
-                  Try fixing the bug and run it again.
-                </p>
+  <div className="debugging-panel">
 
-                {!showSolution ? (
-                  <button
-                    className="show-solution-button"
-                    onClick={() => setShowSolution(true)}
-                  >
-                    💡 Show Solution
-                  </button>
-                ) : (
-                  <>
-                    <p className="solution-label">
-                      Example solution:
-                    </p>
+    <div className="debugging-feedback">
+      <p className="debugging-feedback-title">
+        🐛 Keep debugging!
+      </p>
 
-                    <pre className="solution-code">
-                      {currentQuestion.solution_code}
-                    </pre>
-                  </>
-                )}
-              </>
-            ) : (
+      <p>
+        Your code isn't correct yet.
+        Try fixing the bug and run it again.
+      </p>
+    </div>
+
+    {!showSolution ? (
+      <button
+        className="show-solution-button"
+        onClick={() => setShowSolution(true)}
+      >
+        💡 Show Solution
+      </button>
+    ) : (
+      <div className="solution-reveal">
+
+        <p className="solution-label">
+          Example solution:
+        </p>
+
+        <pre className="solution-code">
+          {currentQuestion.solution_code}
+        </pre>
+
+      </div>
+    )}
+
+  </div>
+) : (
               <>
                 <p className="solution-label">
                   Example solution:

@@ -119,7 +119,7 @@ function History({ onBack }) {
             {history.by_topic.length === 0 ? (
               <p>No topic data available.</p>
             ) : (
-              <div className="topic-list">
+              <div className="history-topic-list">
 
                 {history.by_topic.map((topic) => {
 
@@ -136,32 +136,32 @@ function History({ onBack }) {
                   return (
                     <div
                       key={topic.topic}
-                      className="topic-row"
+                      className="history-topic-row"
                     >
-                      <div className="topic-info">
+                      <div className="history-topic-info">
 
-                        <span className="topic-name">
+                        <span className="history-topic-name">
                           {topic.topic}
                         </span>
 
-                        <span className="topic-score">
+                        <span className="history-topic-score">
                           {topicCorrect} / {topicTotal}
                         </span>
 
                       </div>
 
-                      <div className="topic-progress">
+                      <div className="history-topic-progress">
 
-                        <div className="topic-progress-bar">
+                        <div className="history-topic-progress-bar">
                           <div
-                            className="topic-progress-fill"
+                            className="history-topic-progress-fill"
                             style={{
                               width: `${topicPercentage}%`
                             }}
                           />
                         </div>
 
-                        <span className="topic-percentage">
+                        <span className="history-topic-percentage">
                           {topicPercentage}%
                         </span>
 

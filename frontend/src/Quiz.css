@@ -966,7 +966,9 @@ body {
 }
 
 
-
+/* =========================
+   HISTORY / PROGRESS
+========================= */
 
 .history-card {
   width: min(900px, 92%);
@@ -974,21 +976,41 @@ body {
   padding: 30px;
   border-radius: 20px;
   background: white;
+  color: #1e293b;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 .history-card h1 {
   text-align: center;
+  color: #4f46e5;
   margin-bottom: 30px;
 }
+
+.history-card h2 {
+  color: #1e293b;
+}
+
+.history-card p {
+  color: #475569;
+}
+
+/* Back button */
 
 .history-back-btn {
   border: none;
   background: transparent;
+  color: #4f46e5;
   cursor: pointer;
   font-size: 15px;
+  font-weight: 600;
   margin-bottom: 10px;
 }
+
+.history-back-btn:hover {
+  color: #4338ca;
+}
+
+/* Overall progress */
 
 .overall-stat {
   text-align: center;
@@ -998,28 +1020,35 @@ body {
 .progress-circle {
   width: 130px;
   height: 130px;
-  border-radius: 50%;
+
   margin: 0 auto 15px;
+
+  border-radius: 50%;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border: 10px solid #e5e7eb;
+  background: #eef2ff;
+  border: 10px solid #4f46e5;
 }
 
 .progress-circle span {
   font-size: 30px;
   font-weight: bold;
+  color: #4f46e5;
 }
 
 .overall-stat h2 {
   margin-bottom: 5px;
+  color: #1e293b;
 }
 
 .overall-stat p {
-  color: #666;
+  color: #64748b;
 }
+
+/* Statistics */
 
 .history-stats {
   display: grid;
@@ -1031,7 +1060,10 @@ body {
 .history-stat {
   padding: 20px;
   border-radius: 15px;
-  background: #f7f7f7;
+
+  background: #f8fafc;
+  color: #1e293b;
+
   text-align: center;
 
   display: flex;
@@ -1045,12 +1077,15 @@ body {
 
 .history-stat strong {
   font-size: 25px;
+  color: #1e293b;
 }
 
 .history-stat span:last-child {
-  color: #666;
+  color: #64748b;
   font-size: 14px;
 }
+
+/* Topic section */
 
 .topic-section {
   margin-top: 30px;
@@ -1058,60 +1093,89 @@ body {
 
 .topic-section h2 {
   margin-bottom: 20px;
+  color: #1e293b;
 }
 
-.topic-list {
+/*
+   IMPORTANT:
+   These use unique History selectors instead
+   of overwriting your existing .topic-row styles.
+*/
+
+.history-topic-list {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-.topic-row {
+.history-topic-row {
   padding: 15px;
+
   border-radius: 12px;
-  background: #f8f8f8;
+
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+
+  color: #1e293b;
 }
 
-.topic-info {
+.history-topic-info {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+
   margin-bottom: 8px;
 }
 
-.topic-name {
+.history-topic-name {
+  color: #1e293b;
   font-weight: 600;
 }
 
-.topic-score {
-  color: #666;
+.history-topic-score {
+  color: #64748b;
+  font-size: 14px;
 }
 
-.topic-progress {
+.history-topic-progress {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.topic-progress-bar {
+.history-topic-progress-bar {
   flex: 1;
+
   height: 9px;
+
   border-radius: 10px;
-  background: #ddd;
+
+  background: #e2e8f0;
+
   overflow: hidden;
 }
 
-.topic-progress-fill {
+.history-topic-progress-fill {
   height: 100%;
+
   border-radius: 10px;
+
   background: #4f46e5;
+
   transition: width 0.5s ease;
 }
 
-.topic-percentage {
+.history-topic-percentage {
   width: 45px;
+
   text-align: right;
+
+  color: #4f46e5;
+
   font-weight: 600;
 }
+
+/* Empty history */
 
 .empty-history {
   text-align: center;
@@ -1123,26 +1187,34 @@ body {
   margin-bottom: 15px;
 }
 
-.empty-history p {
-  color: #666;
+.empty-history h2 {
+  color: #1e293b;
 }
+
+.empty-history p {
+  color: #64748b;
+}
+
+
+/* History mobile */
 
 @media (max-width: 600px) {
 
   .history-card {
-    padding: 20px;
-    margin: 20px auto;
+    width: 94%;
+    padding: 22px;
+    margin: 25px auto;
   }
 
   .history-stats {
     grid-template-columns: 1fr;
   }
 
-  .topic-info {
+  .history-topic-info {
     gap: 10px;
   }
 
-  .topic-progress {
+  .history-topic-progress {
     gap: 5px;
   }
 
@@ -1190,6 +1262,130 @@ body {
 
 .global-back-button:active {
   transform: translateY(0);
+}
+
+/* =========================
+   DEBUGGING PANEL
+========================= */
+
+.debugging-panel {
+  margin-top: 20px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #c4b5fd;
+  background: #faf9ff;
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.08);
+}
+
+/* Feedback area */
+
+.debugging-feedback {
+  padding: 18px 20px;
+  border-bottom: 1px solid #ddd6fe;
+}
+
+.debugging-feedback-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 0 0 8px;
+
+  color: #6d28d9;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.debugging-feedback p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.6;
+}
+
+/* Show Solution button */
+
+.show-solution-button {
+  width: 100%;
+
+  padding: 14px 18px;
+
+  border: none;
+  border-radius: 0;
+
+  background: #f5f3ff;
+  color: #6d28d9;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.show-solution-button:hover {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.show-solution-button:active {
+  background: #ddd6fe;
+}
+
+/* Revealed solution */
+
+.solution-reveal {
+  margin: 0;
+  padding: 20px;
+
+  background: #1e1b4b;
+
+  border: none;
+  border-left: none;
+
+  border-radius: 0;
+
+  text-align: left;
+}
+
+.solution-reveal .explanation {
+  margin: 0 0 15px;
+
+  color: #f8fafc;
+  line-height: 1.6;
+}
+
+.solution-label {
+  margin-bottom: 8px;
+
+  color: #c4b5fd;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.solution-code {
+  margin: 0;
+
+  padding: 15px;
+
+  background: #0f172a;
+  color: #a7f3d0;
+
+  border: 1px solid #334155;
+  border-radius: 8px;
+
+  font-family: "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+
+  overflow-x: auto;
+
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 /* ---------- Footer ---------- */
