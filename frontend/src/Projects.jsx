@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchProjects } from "./api";
-import ProjectView from "./ProjectView";
+import ProjectView from "./Projectview.jsx";
 import "./Quiz.css";
 
 export default function Projects({ onBack, pyodide, pyodideReady }) {

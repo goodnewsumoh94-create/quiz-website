@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import ProjectStep from "./ProjectStep";
+import ProjectStep from "./ProjectStep.jsx";
 import { fetchProjectSteps, fetchProjectProgress, saveProjectProgress } from "./api";
 import "./Quiz.css"; // reuse existing card/button styles for now
 
