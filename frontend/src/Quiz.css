@@ -1679,6 +1679,18 @@ body {
   word-wrap: break-word;
 }
 
+.projects-home-button {
+  display: block;
+  width: 100%;
+  margin-top: 25px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+}
+
 /* ---------- Footer ---------- */
 
 .app-footer {

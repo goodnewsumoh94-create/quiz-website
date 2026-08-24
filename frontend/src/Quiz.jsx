@@ -5,7 +5,7 @@ import QuestionCount from "./QuestionCount.jsx";
 import "./Quiz.css";
 import Study from "./Study.jsx";
 
-const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange }, ref) {
+const Quiz = forwardRef(function Quiz({ onShowHistory, onshowStudy, onHomeChange, onShowProjects }, ref) {
   const [allQuestions, setAllQuestions] = useState([]);
   const [quizQuestions, setQuizQuestions] = useState([]);
 
@@ -510,7 +510,7 @@ function handleRunReactCode() {
 if (!selectedTopic) {
   return (
     <div>
-      <QuizHome topics={topics} onStart={startQuiz} />
+      <QuizHome topics={topics} onStart={startQuiz} onProjects={onShowProjects} />
       <button className="view-history" onClick={onShowHistory}>View History</button>
 <button
   className="study"

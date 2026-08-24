@@ -1,6 +1,6 @@
 import "./Quiz.css";
 
-function QuizHome({ topics, onStart }) {
+function QuizHome({ topics, onStart, onProjects }) {
   return (
     <div className="home-card">
 
@@ -11,7 +11,6 @@ function QuizHome({ topics, onStart }) {
       </p>
 
       <div className="topic-grid">
-
         {topics.map((topic) => (
           <button
             key={topic}
@@ -21,8 +20,14 @@ function QuizHome({ topics, onStart }) {
             {topic}
           </button>
         ))}
-
       </div>
+
+      <button
+        className="projects-home-button"
+        onClick={onProjects}
+      >
+         Build Projects
+      </button>
 
     </div>
   );

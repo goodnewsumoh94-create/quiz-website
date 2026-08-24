@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import Quiz from "./Quiz";
 import History from "./History";
 import Study from "./Study.jsx";
+import Projects from "./Projects";
 import Auth from "./Auth.jsx";
 import Footer from "./Footer.jsx";
 import BackButton from "./BackButton.jsx";
@@ -48,25 +49,38 @@ function App() {
 
   const showBack = view !== "quiz" || !quizAtHome;
 
-  let content;
-  if (view === "history") {
-    content = <History onBack={() => setView("quiz")} />;
-  } else if (view === "study") {
-    content = (
-        <Study onBack={() => setView("quiz")}
-        onPracticeTopic={handlePracticeTopic}
-        />
-    );
-  } else {
-    content = (
-      <Quiz
-        ref={quizRef}
-        onShowHistory={() => setView("history")}
-        onshowStudy={() => setView("study")}
-        onHomeChange={setQuizAtHome}
-      />
-    );
-  }
+
+let content;
+
+if (view === "history") {
+  content = <History onBack={() => setView("quiz")} />;
+
+} else if (view === "study") {
+  content = (
+    <Study
+      onBack={() => setView("quiz")}
+      onPracticeTopic={handlePracticeTopic}
+    />
+  );
+
+} else if (view === "projects") {
+  content = (
+    <Projects
+      onBack={() => setView("quiz")}
+    />
+  );
+
+} else {
+  content = (
+    <Quiz
+      ref={quizRef}
+      onShowHistory={() => setView("history")}
+      onshowStudy={() => setView("study")}
+      onShowProjects={() => setView("projects")}
+      onHomeChange={setQuizAtHome}
+    />
+  );
+}
 
   return (
     <div className="app-shell">
