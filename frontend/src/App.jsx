@@ -54,7 +54,7 @@ function App() {
   } else if (view === "study") {
     content = (
         <Study onBack={() => setView("quiz")}
-        onPracticeTopic={handlePracticeTopic()}
+        onPracticeTopic={handlePracticeTopic}
         />
     );
   } else {
