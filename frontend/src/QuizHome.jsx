@@ -1,6 +1,6 @@
 import "./Quiz.css";
 
-function QuizHome({ topics, onStart, onProjects }) {
+function QuizHome({ topics, onStart, onProjects, onHistory, onStudy }) {
   console.log("QuizHome rendered");
   console.log("onProjects:", onProjects);
 
@@ -13,6 +13,7 @@ function QuizHome({ topics, onStart, onProjects }) {
         Choose a topic and test your knowledge.
       </p>
 
+      {/* TOPICS ONLY */}
       <div className="topic-grid">
         {topics.map((topic) => (
           <button
@@ -25,26 +26,34 @@ function QuizHome({ topics, onStart, onProjects }) {
         ))}
       </div>
 
-      {/* PROJECTS BUTTON */}
-      <p style={{ color: "red", fontSize: "20px" }}>
-  TEST PROJECTS BUTTON
-</p>
+      {/* HOME ACTIONS */}
+      <div className="home-actions">
 
-<button
-  type="button"
-  className="projects-button"
-  onClick={onProjects}
->
-  🛠️ Projects
-</button>
+        <button
+          type="button"
+          className="view-history"
+          onClick={onHistory}
+        >
+           View History
+        </button>
 
-      <button
-        type="button"
-        className="view-history"
-        onClick={() => {}}
-      >
-        View History
-      </button>
+        <button
+          type="button"
+          className="study"
+          onClick={onStudy}
+        >
+           Study
+        </button>
+
+        <button
+          type="button"
+          className="projects-button"
+          onClick={onProjects}
+        >
+           Projects
+        </button>
+
+      </div>
 
     </div>
   );
