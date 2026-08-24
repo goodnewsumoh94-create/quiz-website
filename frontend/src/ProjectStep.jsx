@@ -124,13 +124,13 @@ export default function ProjectStep({
 
         {isWebStep && (
           <iframe
-            ref={iframeRef}
-            title="preview"
-            className="live-preview"
-            sandbox="allow-scripts"
-            srcDoc={previewDoc}
-             onLoad={() => setPreviewReady(true)}
-          />
+  ref={iframeRef}
+  title="preview"
+  className="live-preview"
+  sandbox="allow-scripts allow-same-origin"
+  srcDoc={previewDoc}
+  onLoad={() => setPreviewReady(true)}
+/>
         )}
       </div>
 
