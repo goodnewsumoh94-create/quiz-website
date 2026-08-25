@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import ProjectStep from "./ProjectStep.jsx";
+import ProjectStep from "./ProjectStep";
 import { fetchProjectSteps, fetchProjectProgress, saveProjectProgress } from "./api";
 import "./Quiz.css"; // reuse existing card/button styles for now
 
@@ -56,6 +56,18 @@ export default function ProjectView({ project, pyodide, pyodideReady, onExit }) 
   const highestUnlocked = Math.max(0, ...completedSteps) + 1;
   const currentStepData = steps.find((s) => s.step_number === viewingStep);
   const isCurrentStepLocked = viewingStep > highestUnlocked;
+
+  // Guard against a viewingStep that doesn'''t correspond to any real step
+  // (e.g. stale progress data pointing past the last real step, or a
+  // duplicate/removed row). Instead of crashing to a blank screen, fall
+  // back to the last valid step.
+  if (!isCurrentStepLocked && !currentStepData) {
+    const lastValidStep = steps.length > 0 ? steps[steps.length - 1].step_number : 1;
+    if (viewingStep !== lastValidStep) {
+      setViewingStep(lastValidStep);
+    }
+    return <p>Fixing up your progress — one moment...</p>;
+  }
 
   const accumulated = buildAccumulatedCode(steps, stepCode, viewingStep);
   const previewDoc = buildPreviewDoc(accumulated);
