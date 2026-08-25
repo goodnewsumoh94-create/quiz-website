@@ -29,13 +29,13 @@ function QuizHome({ topics, onStart, onProjects, onHistory, onStudy }) {
       {/* HOME ACTIONS */}
       <div className="home-actions">
 
-        <button
-          type="button"
-          className="projects-button"
-          onClick={onProjects}
-        >
-           Projects
-        </button>
+        {/*<button*/}
+        {/*  type="button"*/}
+        {/*  className="projects-button"*/}
+        {/*  onClick={onProjects}*/}
+        {/*>*/}
+        {/*   Projects*/}
+        {/*</button>*/}
 
       </div>
 

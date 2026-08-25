@@ -73,15 +73,8 @@ function App() {
         onPracticeTopic={handlePracticeTopic}
       />
     );
-  } else if (view === "projects") {
-    content = (
-      <Projects
-        onBack={() => setView("quiz")}
-        pyodide={pyodide}
-        pyodideReady={pyodideReady}
-      />
-    );
-  } else {
+} else if (view === "projects") {
+  // Temporarily disabled — see Projects.jsx / ProjectView.jsx for in-progress work
     content = (
       <Quiz
         ref={quizRef}
