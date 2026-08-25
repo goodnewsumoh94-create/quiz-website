@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import Quiz from "./Quiz";
 import History from "./History";
 import Study from "./Study.jsx";
-import Projects from "./Projects.jsx";
 import Auth from "./Auth.jsx";
 import Footer from "./Footer.jsx";
 import BackButton from "./BackButton.jsx";

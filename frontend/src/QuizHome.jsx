@@ -1,8 +1,7 @@
 import "./Quiz.css";
 
 function QuizHome({ topics, onStart, onProjects, onHistory, onStudy }) {
-  console.log("QuizHome rendered");
-  console.log("onProjects:", onProjects);
+
 
   return (
     <div className="home-card">
