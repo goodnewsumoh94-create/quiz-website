@@ -65,15 +65,16 @@ function App() {
 
   if (view === "history") {
     content = <History onBack={() => setView("quiz")} />;
-  } else if (view === "study") {
+} else if (view === "study") {
     content = (
       <Study
         onBack={() => setView("quiz")}
         onPracticeTopic={handlePracticeTopic}
       />
     );
-} else if (view === "projects") {
-  // Temporarily disabled — see Projects.jsx / ProjectView.jsx for in-progress work
+} else {
+    // Covers the normal quiz view, and also view === "projects"
+    // since that entry point is disabled for now.
     content = (
       <Quiz
         ref={quizRef}
@@ -85,7 +86,7 @@ function App() {
         onHomeChange={setQuizAtHome}
       />
     );
-  }
+}
 
   return (
     <div className="app-shell">
