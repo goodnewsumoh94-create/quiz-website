@@ -267,7 +267,7 @@ def get_project_steps(project_id):
     cursor = conn.cursor(dictionary=True)
     cursor.execute("""
         SELECT id, step_number, instructions, starter_code,
-               solution_code, expected_output, language, checks
+               solution_code, expected_output, language, checks, hint
         FROM project_steps
         WHERE project_id = %s
         ORDER BY step_number
@@ -328,7 +328,27 @@ def save_project_progress():
 
     return jsonify({"status": "saved"})
 
+@app.route("/api/project-hint-used", methods=["POST"])
+@require_auth
+def mark_hint_used():
+    data = request.get_json()
+    project_id = data["project_id"]
+    step_number = data["step_number"]
+    hint_type = data.get("type", "hint")  # "hint" or "solution"
 
+    column = "solution_used" if hint_type == "solution" else "hint_used"
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(f"""
+        INSERT INTO project_step_hints (user_id, project_id, step_number, {column})
+        VALUES (%s, %s, %s, TRUE)
+        ON DUPLICATE KEY UPDATE {column} = TRUE
+    """, (request.user_id, project_id, step_number))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({"status": "recorded"})
 
 if __name__ == "__main__":
     app.run(debug=True)

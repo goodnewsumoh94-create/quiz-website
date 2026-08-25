@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { markHintUsed } from "./api";
 
 // Runs each check against the iframe's document. Extend this as new check
 // types come up (attribute checks, computed style checks, etc.)
@@ -24,10 +25,23 @@ function runChecks(doc, checks) {
       // Simulates a real interaction, then asserts on what happened.
       // e.g. { type: "interaction", trigger: "#add-btn", event: "click",
       //        assert: { type: "count", selector: "#todo-list li", min: 1 } }
+      if (check.type === "computedStyle") {
+        const el = doc.querySelector(check.selector);
+        if (!el) return false;
+        const styles = doc.defaultView.getComputedStyle(el);
+        return styles[check.property] === check.expected;
+      }
       if (check.type === "interaction") {
+        // setValueOn lets you type into one element (e.g. an input) before
+        // triggering an event on a different element (e.g. a button) --
+        // needed for "type something, click Add, see it appear" checks.
+        if (check.setValueOn) {
+          const valueEl = doc.querySelector(check.setValueOn);
+          if (valueEl) valueEl.value = check.value ?? "";
+        }
         const trigger = doc.querySelector(check.trigger);
         if (!trigger) return false;
-        if (check.value !== undefined) trigger.value = check.value; // for text inputs
+        if (check.value !== undefined && !check.setValueOn) trigger.value = check.value;
         const eventName = check.event || "click";
         if (eventName === "click") {
           trigger.click();
@@ -45,6 +59,7 @@ function runChecks(doc, checks) {
 
 export default function ProjectStep({
   step,
+  projectId,
   code,
   onCodeChange,
   previewDoc,
@@ -59,11 +74,15 @@ export default function ProjectStep({
   const [feedback, setFeedback] = useState(null); // { correct: bool }
   const iframeRef = useRef(null);
   const [previewReady, setPreviewReady] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const [showSolution, setShowSolution] = useState(false);
 
   useEffect(() => {
     setOutput("");
     setFeedback(null);
     setPreviewReady(false);
+    setShowHint(false);
+    setShowSolution(false);
   }, [step.id]);
 
   async function handleRunPython() {
@@ -137,6 +156,18 @@ export default function ProjectStep({
     if (correct) onComplete();
   }
 
+  function handleShowHint() {
+    setShowHint(true);
+    markHintUsed(projectId, step.step_number, "hint").catch(() => {
+      // Non-critical — don't block the UI on analytics failing.
+    });
+  }
+
+  function handleShowSolution() {
+    setShowSolution(true);
+    markHintUsed(projectId, step.step_number, "solution").catch(() => {});
+  }
+
   const isWebStep = ["html", "css", "js"].includes(step.language);
   const isSqlStep = step.language === "sql";
 
@@ -195,6 +226,42 @@ export default function ProjectStep({
           <p className="feedback-title">
             {feedback.correct ? "✓ Step complete!" : "✕ Not quite yet"}
           </p>
+
+          {!feedback.correct && (
+            <div className="hint-panel">
+              {step.hint && !showHint && !showSolution && (
+                <button className="show-solution-button" onClick={handleShowHint}>
+                  💡 Need a hint?
+                </button>
+              )}
+
+              {showHint && !showSolution && (
+                <div className="solution-reveal">
+                  <p className="solution-label">Hint:</p>
+                  <p className="explanation">{step.hint}</p>
+                  {step.solution_code && (
+                    <button className="show-solution-button" onClick={handleShowSolution}>
+                      Still stuck? Show solution
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {!step.hint && step.solution_code && !showSolution && (
+                <button className="show-solution-button" onClick={handleShowSolution}>
+                  💡 Show Solution
+                </button>
+              )}
+
+              {showSolution && (
+                <div className="solution-reveal">
+                  <p className="solution-label">Example solution:</p>
+                  <pre className="solution-code">{step.solution_code}</pre>
+                </div>
+              )}
+            </div>
+          )}
+
           {feedback.correct && !isLastStep && (
             <button className="next" onClick={onNext}>
               Next step →

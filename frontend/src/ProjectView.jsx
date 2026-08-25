@@ -106,6 +106,7 @@ export default function ProjectView({ project, pyodide, pyodideReady, onExit }) 
         <ProjectStep
           key={currentStepData.id}
           step={currentStepData}
+          projectId={project.id}
           code={stepCode[viewingStep] ?? currentStepData.starter_code ?? ""}
           onCodeChange={handleCodeChange}
           previewDoc={previewDoc}

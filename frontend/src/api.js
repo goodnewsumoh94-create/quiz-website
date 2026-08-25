@@ -107,3 +107,12 @@ export async function saveProjectProgress(projectId, stepNumber) {
   return response.json();
 }
 
+export async function markHintUsed(projectId, stepNumber, type) {
+  requireAuth();
+  const response = await fetch(`${API_URL}/api/project-hint-used`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ project_id: projectId, step_number: stepNumber, type })
+  });
+  return response.json();
+}
