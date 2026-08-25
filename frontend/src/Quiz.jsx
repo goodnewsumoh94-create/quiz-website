@@ -326,26 +326,11 @@ function handleRunJsCode() {
   }
 }
 
-
 function handleRunHtmlCode() {
   try {
     const parser = new DOMParser();
     const userDoc = parser.parseFromString(code, "text/html");
-    const solutionDoc = parser.parseFromString(
-      currentQuestion.solution_code || "",
-      "text/html"
-    );
 
-    // Check for parser errors
-    const parserError = userDoc.querySelector("parsererror");
-
-    if (parserError) {
-      setCodeOutput("Invalid HTML");
-      setCodeFeedback({ correct: false });
-      return;
-    }
-
-    // Normalize HTML so whitespace doesn't matter
     const normalizeHtml = (html) => {
       return html
         .replace(/>\s+</g, "><")
@@ -354,6 +339,14 @@ function handleRunHtmlCode() {
     };
 
     const userHtml = normalizeHtml(userDoc.body.innerHTML);
+
+    // For HTML questions, compare the important structure/content
+    // rather than requiring identical formatting.
+    const solutionDoc = parser.parseFromString(
+      currentQuestion.solution_code || "",
+      "text/html"
+    );
+
     const solutionHtml = normalizeHtml(solutionDoc.body.innerHTML);
 
     const isCorrect = userHtml === solutionHtml;
@@ -374,13 +367,8 @@ function handleRunHtmlCode() {
     setCodeFeedback({ correct: false });
   }
 }
-
 function handleRunCssCode() {
   try {
-    const userCss = code.trim();
-    const solutionCss = (currentQuestion.solution_code || "").trim();
-
-    // Normalize CSS so whitespace and formatting don't matter.
     const normalizeCss = (css) => {
       return css
         .replace(/\/\*[\s\S]*?\*\//g, "")
@@ -390,13 +378,16 @@ function handleRunCssCode() {
         .replace(/\s*:\s*/g, ":")
         .replace(/\s*;\s*/g, ";")
         .replace(/\s*,\s*/g, ",")
-        .trim();
+        .trim()
+        .toLowerCase();
     };
 
-    const normalizedUser = normalizeCss(userCss);
-    const normalizedSolution = normalizeCss(solutionCss);
+    const userCss = normalizeCss(code);
+    const solutionCss = normalizeCss(
+      currentQuestion.solution_code || ""
+    );
 
-    const isCorrect = normalizedUser === normalizedSolution;
+    const isCorrect = userCss === solutionCss;
 
     setCodeOutput(
       isCorrect
@@ -415,26 +406,75 @@ function handleRunCssCode() {
   }
 }
 
-
 function handleRunSqlCode() {
   try {
     const userSql = code
       .trim()
       .replace(/\s+/g, " ")
-      .replace(/\s*;\s*$/, ";");
+      .replace(/\s*;\s*$/, "")
+      .toLowerCase();
 
-    const solutionSql = (currentQuestion.solution_code || "")
+    const expectedSql = (currentQuestion.solution_code || "")
       .trim()
       .replace(/\s+/g, " ")
-      .replace(/\s*;\s*$/, ";");
+      .replace(/\s*;\s*$/, "")
+      .toLowerCase();
 
-    const isCorrect =
-      userSql.toLowerCase() === solutionSql.toLowerCase();
+    // Remove unnecessary parentheses around simple conditions
+    const normalizeSql = (sql) => {
+      return sql
+        .replace(/\(\s*/g, "(")
+        .replace(/\s*\)/g, ")")
+        .replace(/\s*,\s*/g, ",")
+        .replace(/\s*=\s*/g, "=")
+        .trim();
+    };
+
+    const normalizedUser = normalizeSql(userSql);
+    const normalizedExpected = normalizeSql(expectedSql);
+
+    let isCorrect = false;
+
+    // ------------------------------------------------
+    // Accept different valid ways of writing the query
+    // ------------------------------------------------
+
+    // SELECT all students with score > 80
+    if (
+      currentQuestion.question_text
+        .toLowerCase()
+        .includes("score greater than 80")
+    ) {
+      isCorrect =
+        normalizedUser.includes("select *") &&
+        normalizedUser.includes("from students") &&
+        normalizedUser.includes("where") &&
+        normalizedUser.includes("score > 80");
+    }
+
+    // COUNT rows and alias as total
+    else if (
+      currentQuestion.question_text
+        .toLowerCase()
+        .includes("counts the total number of rows")
+    ) {
+      isCorrect =
+        normalizedUser.includes("select count(*)") &&
+        normalizedUser.includes("from students") &&
+        normalizedUser.includes("as total");
+    }
+
+    // ------------------------------------------------
+    // Fallback
+    // ------------------------------------------------
+    else {
+      isCorrect = normalizedUser === normalizedExpected;
+    }
 
     setCodeOutput(
       isCorrect
-        ? "SQL query is correct!"
-        : "The SQL query still has an error."
+        ? "MySQL query is correct!"
+        : "The MySQL query still has an error."
     );
 
     setCodeFeedback({ correct: isCorrect });
@@ -442,6 +482,7 @@ function handleRunSqlCode() {
     if (isCorrect) {
       setScore((prevScore) => prevScore + 1);
     }
+
   } catch (err) {
     setCodeOutput("Error: " + err.message);
     setCodeFeedback({ correct: false });
@@ -463,7 +504,21 @@ function handleRunReactCode() {
       currentQuestion.solution_code || ""
     );
 
-    const isCorrect = userCode === solutionCode;
+    // First try exact normalized comparison
+    let isCorrect = userCode === solutionCode;
+
+    // For the Greeting question, allow different valid component syntax
+    if (
+      currentQuestion.question_text.includes(
+        "component called Greeting"
+      )
+    ) {
+      const hasGreeting =
+        userCode.includes("Greeting") &&
+        userCode.includes("<h1>Hello, World!</h1>");
+
+      isCorrect = hasGreeting;
+    }
 
     setCodeOutput(
       isCorrect
