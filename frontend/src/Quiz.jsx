@@ -329,27 +329,73 @@ function handleRunJsCode() {
 function handleRunHtmlCode() {
   try {
     const parser = new DOMParser();
+
     const userDoc = parser.parseFromString(code, "text/html");
 
-    const normalizeHtml = (html) => {
-      return html
-        .replace(/>\s+</g, "><")
-        .replace(/\s+/g, " ")
-        .trim();
-    };
+    const parserError = userDoc.querySelector("parsererror");
 
-    const userHtml = normalizeHtml(userDoc.body.innerHTML);
+    if (parserError) {
+      setCodeOutput("Invalid HTML");
+      setCodeFeedback({ correct: false });
+      return;
+    }
 
-    // For HTML questions, compare the important structure/content
-    // rather than requiring identical formatting.
-    const solutionDoc = parser.parseFromString(
-      currentQuestion.solution_code || "",
-      "text/html"
-    );
+    const question = currentQuestion.question_text.toLowerCase();
 
-    const solutionHtml = normalizeHtml(solutionDoc.body.innerHTML);
+    let isCorrect = false;
 
-    const isCorrect = userHtml === solutionHtml;
+    // -----------------------------------------
+    // NAVIGATION QUESTION
+    // -----------------------------------------
+    if (
+      question.includes("nav") &&
+      question.includes("3 links") &&
+      question.includes("home") &&
+      question.includes("about") &&
+      question.includes("contact")
+    ) {
+      const nav = userDoc.querySelector("nav");
+      const links = nav ? nav.querySelectorAll("a") : [];
+
+      if (nav && links.length === 3) {
+        const linkTexts = Array.from(links).map(
+          (link) => link.textContent.trim().toLowerCase()
+        );
+
+        const hrefs = Array.from(links).map(
+          (link) => link.getAttribute("href")
+        );
+
+        isCorrect =
+          linkTexts.includes("home") &&
+          linkTexts.includes("about") &&
+          linkTexts.includes("contact") &&
+          hrefs.every((href) => href === "#");
+      }
+    }
+
+    // -----------------------------------------
+    // FALLBACK
+    // -----------------------------------------
+    else {
+      const solutionDoc = parser.parseFromString(
+        currentQuestion.solution_code || "",
+        "text/html"
+      );
+
+      const normalizeHtml = (html) => {
+        return html
+          .replace(/>\s+</g, "><")
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
+      };
+
+      const userHtml = normalizeHtml(userDoc.body.innerHTML);
+      const solutionHtml = normalizeHtml(solutionDoc.body.innerHTML);
+
+      isCorrect = userHtml === solutionHtml;
+    }
 
     setCodeOutput(
       isCorrect
@@ -362,32 +408,75 @@ function handleRunHtmlCode() {
     if (isCorrect) {
       setScore((prevScore) => prevScore + 1);
     }
+
   } catch (err) {
     setCodeOutput("Error: " + err.message);
     setCodeFeedback({ correct: false });
   }
 }
+
 function handleRunCssCode() {
   try {
-    const normalizeCss = (css) => {
-      return css
-        .replace(/\/\*[\s\S]*?\*\//g, "")
-        .replace(/\s+/g, " ")
-        .replace(/\s*{\s*/g, "{")
-        .replace(/\s*}\s*/g, "}")
-        .replace(/\s*:\s*/g, ":")
-        .replace(/\s*;\s*/g, ";")
-        .replace(/\s*,\s*/g, ",")
-        .trim()
-        .toLowerCase();
-    };
+    const css = code.toLowerCase();
 
-    const userCss = normalizeCss(code);
-    const solutionCss = normalizeCss(
-      currentQuestion.solution_code || ""
-    );
+    let isCorrect = false;
 
-    const isCorrect = userCss === solutionCss;
+    // -----------------------------------------
+    // BLUE BUTTON QUESTION
+    // -----------------------------------------
+    if (
+      currentQuestion.question_text
+        .toLowerCase()
+        .includes("blue background")
+    ) {
+      const hasButtonSelector =
+        css.includes(".btn");
+
+      const hasBlueBackground =
+        css.includes("#007bff") ||
+        css.includes("rgb(0, 123, 255)");
+
+      const hasWhiteText =
+        css.includes("color: white") ||
+        css.includes("color:white") ||
+        css.includes("#ffffff") ||
+        css.includes("#fff");
+
+      const hasPadding =
+        css.includes("padding: 10px") ||
+        css.includes("padding:10px");
+
+      isCorrect =
+        hasButtonSelector &&
+        hasBlueBackground &&
+        hasWhiteText &&
+        hasPadding;
+    }
+
+    // -----------------------------------------
+    // FALLBACK
+    // -----------------------------------------
+    else {
+      const normalizeCss = (source) => {
+        return source
+          .replace(/\/\*[\s\S]*?\*\//g, "")
+          .replace(/\s+/g, " ")
+          .replace(/\s*{\s*/g, "{")
+          .replace(/\s*}\s*/g, "}")
+          .replace(/\s*:\s*/g, ":")
+          .replace(/\s*;\s*/g, ";")
+          .replace(/\s*,\s*/g, ",")
+          .trim()
+          .toLowerCase();
+      };
+
+      const normalizedUser = normalizeCss(code);
+      const normalizedSolution = normalizeCss(
+        currentQuestion.solution_code || ""
+      );
+
+      isCorrect = normalizedUser === normalizedSolution;
+    }
 
     setCodeOutput(
       isCorrect
@@ -400,6 +489,7 @@ function handleRunCssCode() {
     if (isCorrect) {
       setScore((prevScore) => prevScore + 1);
     }
+
   } catch (err) {
     setCodeOutput("Error: " + err.message);
     setCodeFeedback({ correct: false });
@@ -491,33 +581,87 @@ function handleRunSqlCode() {
 
 function handleRunReactCode() {
   try {
-    const normalizeReact = (source) => {
-      return source
-        .replace(/\/\*[\s\S]*?\*\//g, "")
-        .replace(/\/\/.*$/gm, "")
-        .replace(/\s+/g, " ")
-        .trim();
-    };
+    const source = code
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\/\/.*$/gm, "")
+      .replace(/\s+/g, " ")
+      .trim();
 
-    const userCode = normalizeReact(code);
-    const solutionCode = normalizeReact(
-      currentQuestion.solution_code || ""
-    );
+    const question = currentQuestion.question_text.toLowerCase();
 
-    // First try exact normalized comparison
-    let isCorrect = userCode === solutionCode;
+    let isCorrect = false;
 
-    // For the Greeting question, allow different valid component syntax
+    // -----------------------------------------
+    // GREETING QUESTION
+    // -----------------------------------------
     if (
-      currentQuestion.question_text.includes(
-        "component called Greeting"
-      )
+      question.includes("component called greeting") &&
+      question.includes("hello, world")
     ) {
-      const hasGreeting =
-        userCode.includes("Greeting") &&
-        userCode.includes("<h1>Hello, World!</h1>");
+      const hasComponent =
+        /function\s+Greeting\s*\(/i.test(source);
 
-      isCorrect = hasGreeting;
+      const hasHeading =
+        /<h1>\s*Hello,\s*World!\s*<\/h1>/i.test(source);
+
+      const hasReturn =
+        /return\s+<h1>/i.test(source);
+
+      isCorrect =
+        hasComponent &&
+        hasHeading &&
+        hasReturn;
+    }
+
+    // -----------------------------------------
+    // COUNTER QUESTION
+    // -----------------------------------------
+    else if (
+      question.includes("counter component") &&
+      question.includes("usestate")
+    ) {
+      const hasUseState =
+        /useState\s*\(\s*0\s*\)/i.test(source);
+
+      const hasStateDestructuring =
+        /\[\s*\w+\s*,\s*\w+\s*\]\s*=\s*useState/i.test(source);
+
+      const hasButton =
+        /<button/i.test(source);
+
+      const hasIncrement =
+        /set\w+\s*\(/i.test(source);
+
+      const hasCount =
+        /\{\s*\w+\s*\}/.test(source);
+
+      isCorrect =
+        hasUseState &&
+        hasStateDestructuring &&
+        hasButton &&
+        hasIncrement &&
+        hasCount;
+    }
+
+    // -----------------------------------------
+    // FALLBACK
+    // -----------------------------------------
+    else {
+      const normalizeReact = (source) => {
+        return source
+          .replace(/\/\*[\s\S]*?\*\//g, "")
+          .replace(/\/\/.*$/gm, "")
+          .replace(/\s+/g, " ")
+          .trim();
+      };
+
+      const userCode = normalizeReact(code);
+
+      const solutionCode = normalizeReact(
+        currentQuestion.solution_code || ""
+      );
+
+      isCorrect = userCode === solutionCode;
     }
 
     setCodeOutput(
@@ -531,6 +675,7 @@ function handleRunReactCode() {
     if (isCorrect) {
       setScore((prevScore) => prevScore + 1);
     }
+
   } catch (err) {
     setCodeOutput("Error: " + err.message);
     setCodeFeedback({ correct: false });
