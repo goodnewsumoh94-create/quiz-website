@@ -264,44 +264,92 @@ def get_questions():
 
     return jsonify(rows)
 
-
 @app.route("/api/answer", methods=["POST"])
 @require_auth
 def submit_answer():
     data = request.get_json()
-    question_id = data["question_id"]
-    user_answer = data["user_answer"]
+
+    question_id = data.get("question_id")
+    user_answer = data.get("user_answer")
+
+    if question_id is None or user_answer is None:
+        return jsonify({"error": "question_id and user_answer are required"}), 400
 
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute(
-        "SELECT correct_option, explanation FROM questions WHERE id = %s",
-        (question_id,)
-    )
+    cursor.execute("""
+        SELECT
+            correct_option,
+            explanation,
+            question_type,
+            expected_output,
+            solution_code
+        FROM questions
+        WHERE id = %s
+    """, (question_id,))
+
     result = cursor.fetchone()
 
     if result is None:
         cursor.close()
         conn.close()
-        return "Not valid", 404
+        return jsonify({"error": "Question not found"}), 404
 
-    is_correct = user_answer == result["correct_option"]
+    question_type = result["question_type"]
 
-    cursor.execute(
-        "INSERT INTO results (questions_id, user_answer, user_id) VALUES (%s, %s, %s)",
-        (question_id, user_answer, request.user_id)
-    )
-    conn.commit()
+    # ---------------------------------------
+    # MULTIPLE CHOICE
+    # ---------------------------------------
+    if question_type == "multiple_choice":
+        is_correct = user_answer == result["correct_option"]
+
+        cursor.execute("""
+            INSERT INTO results
+                (questions_id, user_answer, user_id)
+            VALUES (%s, %s, %s)
+        """, (question_id, user_answer, request.user_id))
+
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+            "correct": is_correct,
+            "correct_answer": result["correct_option"],
+            "explanation": result["explanation"]
+        })
+
+    # ---------------------------------------
+    # CODING / DEBUGGING
+    # ---------------------------------------
+    elif question_type in ("coding", "debugging"):
+
+        # The frontend sends the user's code/output.
+        # For now, return the expected information so
+        # the frontend can handle code execution.
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+            "correct": False,
+            "correct_answer": result["correct_option"],
+            "explanation": result["explanation"],
+            "question_type": question_type,
+            "expected_output": result["expected_output"],
+            "solution_code": result["solution_code"]
+        })
+
+    # ---------------------------------------
+    # UNKNOWN QUESTION TYPE
+    # ---------------------------------------
     cursor.close()
     conn.close()
 
     return jsonify({
-        "correct": is_correct,
-        "correct_answer": result["correct_option"],
-        "explanation": result["explanation"]
-    })
-
+        "error": f"Unknown question type: {question_type}"
+    }), 400
 
 @app.route("/api/history", methods=["GET"])
 @require_auth
