@@ -2,7 +2,6 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from mysql.connector import pooling
 import os
-import requests
 from dotenv import load_dotenv
 import jwt
 import datetime
@@ -140,151 +139,61 @@ def test_db():
     conn.close()
     return {"database": "connected", "result": result[0]}
 
+
 @app.route("/api/questions", methods=["GET"])
 def get_questions():
-    # -----------------------------------------
-    # 1. Get YOUR questions from MySQL
-    # -----------------------------------------
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-
     cursor.execute("""
         SELECT
-            id,
-            topic,
-            question_text,
-            option_a,
-            option_b,
-            option_c,
-            option_d,
-            correct_option,
-            explanation,
-            question_type,
-            expected_output,
-            solution_code,
-            language,
-            starter_code
+            id, topic, question_text, option_a, option_b, option_c, option_d,
+            correct_option, explanation, question_type,
+            expected_output, solution_code, language, starter_code
         FROM questions
     """)
-
     rows = cursor.fetchall()
-
     cursor.close()
     conn.close()
-
-    # -----------------------------------------
-    # 2. Get extra multiple-choice questions
-    #    from QuizAPI
-    # -----------------------------------------
-
-    api_key = os.getenv("QUIZ_API_KEY")
-
-    if not api_key:
-        # If the API key isn't configured,
-        # just return your normal MySQL questions.
-        return jsonify(rows)
-
-    try:
-        response = requests.get(
-            "https://quizapi.io/api/v1/questions",
-            params={
-                "category": "Programming",
-                "type": "MULTIPLE_CHOICE",
-                "limit": 20,
-                "random": "true"
-            },
-            headers={
-                "Authorization": f"Bearer {api_key}"
-            },
-            timeout=10
-        )
-
-        if response.ok:
-            api_data = response.json().get("data", [])
-
-            for q in api_data:
-                answers = q.get("answers", [])
-
-                # Make sure there are enough answers
-                if len(answers) < 4:
-                    continue
-
-                correct_option = None
-
-                for index, answer in enumerate(answers[:4]):
-                    if answer.get("isCorrect"):
-                        correct_option = chr(65 + index)
-                        break
-
-                if correct_option is None:
-                    continue
-
-                api_question = {
-                    # Prefix API IDs so they cannot collide
-                    # with your MySQL IDs.
-                    "id": f"api_{q.get('id')}",
-
-                    "topic": q.get("category") or "Programming",
-
-                    "question_text": q.get("text", ""),
-
-                    "option_a": answers[0].get("text", ""),
-                    "option_b": answers[1].get("text", ""),
-                    "option_c": answers[2].get("text", ""),
-                    "option_d": answers[3].get("text", ""),
-
-                    "correct_option": correct_option,
-
-                    "explanation": q.get("explanation") or "",
-
-                    "question_type": "multiple_choice",
-
-                    # API questions don't have these
-                    "expected_output": None,
-                    "solution_code": None,
-                    "language": None,
-                    "starter_code": None
-                }
-
-                rows.append(api_question)
-
-        else:
-            print(
-                "QuizAPI request failed:",
-                response.status_code,
-                response.text
-            )
-
-    except requests.RequestException as error:
-        print("QuizAPI request error:", error)
-
-    # -----------------------------------------
-    # 3. Return MySQL + API questions together
-    # -----------------------------------------
-
     return jsonify(rows)
+
+
 @app.route("/api/answer", methods=["POST"])
 @require_auth
 def submit_answer():
     data = request.get_json()
-    question_id = data.get("question_id")
-    user_answer = data.get("user_answer")
-    correct_option = data.get("correct_option")  # frontend sends this back for api_ questions
+    question_id = data["question_id"]
+    user_answer = data["user_answer"]
 
-    if question_id is None or user_answer is None:
-        return jsonify({"error": "question_id and user_answer are required"}), 400
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
 
-    # API-sourced question: grade against what the frontend already has,
-    # skip DB lookup and don't try to insert into `results` (FK expects an int)
-    if str(question_id).startswith("api_"):
-        if correct_option is None:
-            return jsonify({"error": "correct_option is required for API questions"}), 400
-        return jsonify({
-            "correct": user_answer == correct_option,
-            "correct_answer": correct_option
-        })
+    cursor.execute(
+        "SELECT correct_option, explanation FROM questions WHERE id = %s",
+        (question_id,)
+    )
+    result = cursor.fetchone()
 
-    # ... existing MySQL lookup logic continues here
+    if result is None:
+        cursor.close()
+        conn.close()
+        return "Not valid", 404
+
+    is_correct = user_answer == result["correct_option"]
+
+    cursor.execute(
+        "INSERT INTO results (questions_id, user_answer, user_id) VALUES (%s, %s, %s)",
+        (question_id, user_answer, request.user_id)
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({
+        "correct": is_correct,
+        "correct_answer": result["correct_option"],
+        "explanation": result["explanation"]
+    })
+
 
 @app.route("/api/history", methods=["GET"])
 @require_auth
