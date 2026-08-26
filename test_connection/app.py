@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from mysql.connector import pooling
 import os
+import requests
 from dotenv import load_dotenv
 import jwt
 import datetime
@@ -139,21 +140,128 @@ def test_db():
     conn.close()
     return {"database": "connected", "result": result[0]}
 
-
 @app.route("/api/questions", methods=["GET"])
 def get_questions():
+    # -----------------------------------------
+    # 1. Get YOUR questions from MySQL
+    # -----------------------------------------
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
+
     cursor.execute("""
         SELECT
-            id, topic, question_text, option_a, option_b, option_c, option_d,
-            correct_option, explanation, question_type,
-            expected_output, solution_code, language, starter_code
+            id,
+            topic,
+            question_text,
+            option_a,
+            option_b,
+            option_c,
+            option_d,
+            correct_option,
+            explanation,
+            question_type,
+            expected_output,
+            solution_code,
+            language,
+            starter_code
         FROM questions
     """)
+
     rows = cursor.fetchall()
+
     cursor.close()
     conn.close()
+
+    # -----------------------------------------
+    # 2. Get extra multiple-choice questions
+    #    from QuizAPI
+    # -----------------------------------------
+
+    api_key = os.getenv("QUIZ_API_KEY")
+
+    if not api_key:
+        # If the API key isn't configured,
+        # just return your normal MySQL questions.
+        return jsonify(rows)
+
+    try:
+        response = requests.get(
+            "https://quizapi.io/api/v1/questions",
+            params={
+                "category": "Programming",
+                "type": "MULTIPLE_CHOICE",
+                "limit": 20,
+                "random": "true"
+            },
+            headers={
+                "Authorization": f"Bearer {api_key}"
+            },
+            timeout=10
+        )
+
+        if response.ok:
+            api_data = response.json().get("data", [])
+
+            for q in api_data:
+                answers = q.get("answers", [])
+
+                # Make sure there are enough answers
+                if len(answers) < 4:
+                    continue
+
+                correct_option = None
+
+                for index, answer in enumerate(answers[:4]):
+                    if answer.get("isCorrect"):
+                        correct_option = chr(65 + index)
+                        break
+
+                if correct_option is None:
+                    continue
+
+                api_question = {
+                    # Prefix API IDs so they cannot collide
+                    # with your MySQL IDs.
+                    "id": f"api_{q.get('id')}",
+
+                    "topic": q.get("category") or "Programming",
+
+                    "question_text": q.get("text", ""),
+
+                    "option_a": answers[0].get("text", ""),
+                    "option_b": answers[1].get("text", ""),
+                    "option_c": answers[2].get("text", ""),
+                    "option_d": answers[3].get("text", ""),
+
+                    "correct_option": correct_option,
+
+                    "explanation": q.get("explanation") or "",
+
+                    "question_type": "multiple_choice",
+
+                    # API questions don't have these
+                    "expected_output": None,
+                    "solution_code": None,
+                    "language": None,
+                    "starter_code": None
+                }
+
+                rows.append(api_question)
+
+        else:
+            print(
+                "QuizAPI request failed:",
+                response.status_code,
+                response.text
+            )
+
+    except requests.RequestException as error:
+        print("QuizAPI request error:", error)
+
+    # -----------------------------------------
+    # 3. Return MySQL + API questions together
+    # -----------------------------------------
+
     return jsonify(rows)
 
 
