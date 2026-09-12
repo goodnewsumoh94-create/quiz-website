@@ -1107,7 +1107,6 @@ function handleRunReactCode() {
       disabled={codeFeedback?.correct === true}
     />
 
-    console.log("topic check:", currentQuestion.topic, currentQuestion.topic === "Flask");
     <button
       className="run-code-button"
       onClick={
