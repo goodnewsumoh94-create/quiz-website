@@ -247,6 +247,204 @@ async function handleAnswer(displayLetter, originalLetter) {
   }
 }
 
+
+// Runs Flask coding/debugging questions without trying to import Flask
+async function handleRunFlaskCode() {
+  if (!pyodide) return;
+
+  try {
+    // First, check whether the submitted Python code is syntactically valid.
+    await pyodide.runPythonAsync(`
+import ast
+ast.parse(${JSON.stringify(code)})
+`);
+
+    const userCode = code
+      .replace(/#.*$/gm, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+
+    const solutionCode = (currentQuestion.solution_code || "")
+      .replace(/#.*$/gm, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+
+    let isCorrect = false;
+
+    /*
+     * Flask questions are checked by their required structure
+     * instead of trying to actually start a Flask server.
+     */
+
+    const question = currentQuestion.question_text.toLowerCase();
+
+    // -----------------------------------------
+    // SQUARE QUESTION
+    // -----------------------------------------
+    if (
+      question.includes("square") &&
+      question.includes("int:number")
+    ) {
+      isCorrect =
+        userCode.includes("from flask import flask") &&
+        userCode.includes("flask(__name__)") &&
+        userCode.includes("@app.route") &&
+        userCode.includes("number * number");
+    }
+
+    // -----------------------------------------
+    // WELCOME QUESTION
+    // -----------------------------------------
+    else if (
+      question.includes("welcome to flask")
+    ) {
+      isCorrect =
+        userCode.includes("from flask import flask") &&
+        userCode.includes("app = flask(__name__)") &&
+        userCode.includes("@app.route") &&
+        userCode.includes("welcome to flask");
+    }
+
+    // -----------------------------------------
+    // USERNAME QUESTION
+    // -----------------------------------------
+    else if (
+      question.includes("username") &&
+      question.includes("hello")
+    ) {
+      isCorrect =
+        userCode.includes("from flask import flask") &&
+        userCode.includes("<username>") &&
+        userCode.includes("def user(username)") ||
+        userCode.includes("def greet(username)");
+    }
+
+    // -----------------------------------------
+    // FORM ADDITION
+    // -----------------------------------------
+    else if (
+      question.includes("post") &&
+      question.includes("form") &&
+      question.includes("sum")
+    ) {
+      isCorrect =
+        userCode.includes("from flask import flask, request") &&
+        userCode.includes('methods=["post"]') &&
+        userCode.includes("request.form") &&
+        userCode.includes("int(");
+    }
+
+    // -----------------------------------------
+    // JSON STATUS
+    // -----------------------------------------
+    else if (
+      question.includes("json") &&
+      question.includes("status")
+    ) {
+      isCorrect =
+        userCode.includes("from flask import flask") &&
+        userCode.includes("return {") &&
+        userCode.includes('"status"') &&
+        userCode.includes('"online"');
+    }
+
+    // -----------------------------------------
+    // MULTIPLICATION
+    // -----------------------------------------
+    else if (
+      question.includes("multiply") &&
+      question.includes("int:a") &&
+      question.includes("int:b")
+    ) {
+      isCorrect =
+        userCode.includes("<int:a>") &&
+        userCode.includes("<int:b>") &&
+        userCode.includes("a * b");
+    }
+
+    // -----------------------------------------
+    // PROFILE JSON
+    // -----------------------------------------
+    else if (
+      question.includes("profile") &&
+      question.includes("json")
+    ) {
+      isCorrect =
+        userCode.includes("return {") &&
+        userCode.includes('"name"') &&
+        userCode.includes('"age"');
+    }
+
+    // -----------------------------------------
+    // ADULT / MINOR
+    // -----------------------------------------
+    else if (
+      question.includes("adult") &&
+      question.includes("18")
+    ) {
+      isCorrect =
+        userCode.includes("if age >= 18") &&
+        userCode.includes("adult") &&
+        userCode.includes("minor");
+    }
+
+    // -----------------------------------------
+    // QUERY PARAMETER
+    // -----------------------------------------
+    else if (
+      question.includes("query parameter") ||
+      question.includes("query parameter")
+    ) {
+      isCorrect =
+        userCode.includes("request.args") &&
+        userCode.includes(".get(");
+    }
+
+    // -----------------------------------------
+    // ITEMS LIST
+    // -----------------------------------------
+    else if (
+      question.includes("json list") &&
+      question.includes("item")
+    ) {
+      isCorrect =
+        userCode.includes("return [") &&
+        userCode.includes("laptop") &&
+        userCode.includes("mouse") &&
+        userCode.includes("keyboard");
+    }
+
+    // -----------------------------------------
+    // FALLBACK
+    // -----------------------------------------
+    else {
+      // For Flask questions that don't have a
+      // special checker yet, compare normalized code.
+      isCorrect = userCode === solutionCode;
+    }
+
+    setCodeOutput(
+      isCorrect
+        ? "Flask code is correct!"
+        : "The Flask code still has an error."
+    );
+
+    setCodeFeedback({ correct: isCorrect });
+
+    if (isCorrect) {
+      setScore((prevScore) => prevScore + 1);
+    }
+
+  } catch (err) {
+    const lines = err.message.trim().split("\n");
+    const lastLine = lines[lines.length - 1];
+
+    setCodeOutput("Error: " + lastLine);
+    setCodeFeedback({ correct: false });
+  }
+}
   // Runs the code in-browser via Pyodide and checks it against expected_output.
   // Nothing here ever touches the Flask server — execution is entirely client-side.
   async function handleRunCode() {
@@ -909,20 +1107,23 @@ function handleRunReactCode() {
       disabled={codeFeedback?.correct === true}
     />
 
+    console.log("topic check:", currentQuestion.topic, currentQuestion.topic === "Flask");
     <button
       className="run-code-button"
-onClick={
+      onClick={
   currentQuestion.topic === "React"
     ? handleRunReactCode
-    : currentQuestion.language === "python"
-      ? handleRunCode
-      : currentQuestion.language === "html"
-        ? handleRunHtmlCode
-        : currentQuestion.language === "css"
-          ? handleRunCssCode
-          : currentQuestion.language === "sql"
-            ? handleRunSqlCode
-            : handleRunJsCode
+    : currentQuestion.topic === "Flask"
+      ? handleRunFlaskCode
+      : currentQuestion.language === "python"
+        ? handleRunCode
+        : currentQuestion.language === "html"
+          ? handleRunHtmlCode
+          : currentQuestion.language === "css"
+            ? handleRunCssCode
+            : currentQuestion.language === "sql"
+              ? handleRunSqlCode
+              : handleRunJsCode
 }
       disabled={
         (currentQuestion.language === "python" && !pyodideReady) ||
